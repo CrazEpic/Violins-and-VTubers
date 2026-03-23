@@ -5,17 +5,10 @@ public class AvatarController : MonoBehaviour
 {
     public Animator animator;
 
-    [Header("Avatar Root")]
-    public Transform avatarRoot;
-    public float scale = 1.0f;
-
     [Header("Axis Flip Settings")]
     public bool flipX = false;
     public bool flipY = false;
     public bool flipZ = false;
-
-    [Header("Smoothing")]
-    public float rotationSmooth = 12f;
 
     Quaternion initialRotation;
 

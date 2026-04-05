@@ -11,14 +11,22 @@ public class AvatarController : MonoBehaviour
     {
         if (animator == null || InstanceManager.Instance.mediapipeUDP == null) return;
 
-        ApplyTorso();
-        ApplyArms();
-        ApplyLegs();
+        // ApplyTorso();
+        // ApplyArms();
+        // ApplyLegs();
+        ApplyHands();
     }
 
     Vector3 L(MediapipeUDP.PoseLandmark l)
     {
         return InstanceManager.Instance.mediapipeUDP.poseLandmarksDict[l];
+    }
+
+    Vector3 H(MediapipeUDP.HandLandmark h, bool left = true)
+    {
+        return (left) ?
+            InstanceManager.Instance.mediapipeUDP.leftHandLandmarksDict[h] :
+            InstanceManager.Instance.mediapipeUDP.rightHandLandmarksDict[h];
     }
 
     void ApplyTorso()
@@ -110,5 +118,27 @@ public class AvatarController : MonoBehaviour
         ApplyRotation(rightUpperLeg, -rightUpperLeg.up, L(MediapipeUDP.PoseLandmark.LeftKnee) - L(MediapipeUDP.PoseLandmark.LeftHip));
         ApplyRotation(rightLowerLeg, -rightLowerLeg.up, L(MediapipeUDP.PoseLandmark.LeftAnkle) - L(MediapipeUDP.PoseLandmark.LeftKnee));
         ApplyRotation(rightFoot, rightFoot.forward, L(MediapipeUDP.PoseLandmark.LeftFootIndex) - L(MediapipeUDP.PoseLandmark.LeftAnkle));
+    }
+
+    void ApplyHands()
+    {
+        // Transform leftThumbProximal = animator.GetBoneTransform(HumanBodyBones.LeftThumbProximal);
+        // Transform leftThumbIntermediate = animator.GetBoneTransform(HumanBodyBones.LeftThumbIntermediate);
+        // Transform leftThumbDistal = animator.GetBoneTransform(HumanBodyBones.LeftThumbDistal);
+
+        Transform leftIndexProximal = animator.GetBoneTransform(HumanBodyBones.LeftIndexProximal);
+        Transform leftIndexIntermediate = animator.GetBoneTransform(HumanBodyBones.LeftIndexIntermediate);
+        Transform leftIndexDistal = animator.GetBoneTransform(HumanBodyBones.LeftIndexDistal);
+
+        ApplyRotation(leftIndexProximal, -leftIndexProximal.right, H(MediapipeUDP.HandLandmark.IndexFingerPIP) - H(MediapipeUDP.HandLandmark.IndexFingerMCP));
+        ApplyRotation(leftIndexIntermediate, -leftIndexIntermediate.right, H(MediapipeUDP.HandLandmark.IndexFingerDIP) - H(MediapipeUDP.HandLandmark.IndexFingerPIP));
+        ApplyRotation(leftIndexDistal, -leftIndexDistal.right, H(MediapipeUDP.HandLandmark.IndexFingerTIP) - H(MediapipeUDP.HandLandmark.IndexFingerDIP));
+
+        // Transform leftUpperArm = animator.GetBoneTransform(HumanBodyBones.LeftUpperArm);
+        // Transform leftLowerArm = animator.GetBoneTransform(HumanBodyBones.LeftLowerArm);
+        // Transform leftHand = animator.GetBoneTransform(HumanBodyBones.LeftHand);
+        // ApplyRotation(leftUpperArm, -leftUpperArm.right, L(MediapipeUDP.PoseLandmark.RightElbow) - L(MediapipeUDP.PoseLandmark.RightShoulder));
+        // ApplyRotation(leftLowerArm, -leftLowerArm.right, L(MediapipeUDP.PoseLandmark.RightWrist) - L(MediapipeUDP.PoseLandmark.RightElbow));
+        // ApplyRotation(leftHand, -leftHand.right, L(MediapipeUDP.PoseLandmark.RightIndex) - L(MediapipeUDP.PoseLandmark.RightWrist));
     }
 }

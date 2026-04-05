@@ -46,7 +46,7 @@ public class MediapipeUDP : MonoBehaviour
         RingFingerPIP = 14, RingFingerDIP = 15,
         RingFingerTIP = 16, PinkyMCP = 17,
         PinkyPIP = 18, PinkyDIP = 19,
-        PinkyTIP = 20 
+        PinkyTIP = 20
     }
 
 
@@ -228,20 +228,20 @@ public class MediapipeUDP : MonoBehaviour
 
                 Vector3 localOffset = kv.Value - wristLHand;
 
-                leftHandObjectsDict[lm].transform.position = wristLPose + localOffset*scale + jointObjectsOffset;
+                leftHandObjectsDict[lm].transform.position = wristLPose + localOffset * scale + jointObjectsOffset;
             }
 
             // right hand
             Vector3 wristRHand = rightHandLandmarksDict[HandLandmark.Wrist];
             Vector3 wristRPose = poseLandmarksDict[PoseLandmark.RightWrist];
-            
+
             foreach (var kv in rightHandLandmarksDict)
             {
                 HandLandmark lm = kv.Key;
 
                 Vector3 localOffset = kv.Value - wristRHand;
 
-                rightHandObjectsDict[lm].transform.position = wristRPose + localOffset*scale + jointObjectsOffset;
+                rightHandObjectsDict[lm].transform.position = wristRPose + localOffset * scale + jointObjectsOffset;
             }
 
         }

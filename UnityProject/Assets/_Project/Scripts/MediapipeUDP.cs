@@ -217,24 +217,31 @@ public class MediapipeUDP : MonoBehaviour
                 }
             }
 
+            // left hand
+            Vector3 wristLHand = leftHandLandmarksDict[HandLandmark.Wrist];
+            Vector3 wristLPose = poseLandmarksDict[PoseLandmark.LeftWrist];
+            float scale = 1f; // change if bad
+
             foreach (var kv in leftHandLandmarksDict)
             {
                 HandLandmark lm = kv.Key;
 
-                if (leftHandObjectsDict.ContainsKey(lm))
-                {
-                    leftHandObjectsDict[lm].transform.position = kv.Value + jointObjectsOffset;
-                }
+                Vector3 localOffset = kv.Value - wristLHand;
+
+                leftHandObjectsDict[lm].transform.position = wristLPose + localOffset*scale + jointObjectsOffset;
             }
 
+            // right hand
+            Vector3 wristRHand = rightHandLandmarksDict[HandLandmark.Wrist];
+            Vector3 wristRPose = poseLandmarksDict[PoseLandmark.RightWrist];
+            
             foreach (var kv in rightHandLandmarksDict)
             {
                 HandLandmark lm = kv.Key;
 
-                if (rightHandObjectsDict.ContainsKey(lm))
-                {
-                    rightHandObjectsDict[lm].transform.position = kv.Value + jointObjectsOffset;
-                }
+                Vector3 localOffset = kv.Value - wristRHand;
+
+                rightHandObjectsDict[lm].transform.position = wristRPose + localOffset*scale + jointObjectsOffset;
             }
 
         }

@@ -13,6 +13,7 @@ class ViolinModule(InstrumentModule):
         self._left_x_ema = None
         self._prev_right_wrist_local = None
         self._prev_t = None
+        self._arm_elevation_ema = None  # For temporal smoothing of arm elevation signal
 
         self._string_centers = {
             "G": float(profile.get("string_centers", {}).get("G", 0.030)),
@@ -24,6 +25,15 @@ class ViolinModule(InstrumentModule):
         self._position_bins = [float(x) for x in profile.get("position_bins", [0.03, 0.08, 0.13, 0.18])]
         self._bow_pressure_center_y = float(profile.get("bow_pressure_center_y", -0.12))
         self._bow_pressure_half_width = float(profile.get("bow_pressure_half_width", 0.08))
+        
+        # Right arm elevation thresholds for string detection
+        # Arm elevation goes from 0 (E string) to 1 (G string)
+        self._arm_elevation_thresholds = {
+            "E": float(profile.get("arm_elevation_E", 0.20)),   # Elbow low, arm down
+            "A": float(profile.get("arm_elevation_A", 0.40)),   # Elbow medium
+            "D": float(profile.get("arm_elevation_D", 0.60)),   # Elbow higher
+            "G": float(profile.get("arm_elevation_G", 0.80)),   # Elbow high, arm lifted
+        }
 
     def name(self) -> str:
         return "violin"
@@ -152,7 +162,11 @@ class ViolinModule(InstrumentModule):
                     quat,
                 )
 
-                string_contact = self._estimate_string_from_local(index_local[2])
+                # NEW: Use right-arm-based detection instead of left hand Z-position
+                pose = features.get("pose")
+                string_contact = self._estimate_string_from_arm_elevation(pose)
+                
+                # Keep left hand analysis for finger position and states
                 finger_x = float(np.mean([index_local[0], middle_local[0], ring_local[0]]))
                 if self._left_x_ema is None:
                     self._left_x_ema = finger_x
@@ -252,6 +266,102 @@ class ViolinModule(InstrumentModule):
         if norm < 1e-8:
             return np.array([0.0, 0.0, 0.0], dtype=np.float32)
         return v / norm
+
+    def _estimate_string_from_arm_elevation(self, pose: dict) -> str:
+        """
+        Detect string based on right arm elevation (bow arm).
+        
+        Combines two features:
+        1. Elbow height relative to shoulder (low → high: E → G)
+        2. Shoulder abduction angle (arm pointing down → lifted: E → G)
+        
+        Returns: String name "E", "A", "D", or "G"
+        """
+        if pose is None:
+            return "A"  # Default if no pose
+        
+        joints = pose.get("joints", {})
+        right_shoulder = np.asarray(joints.get("right_shoulder", [0, 0, 0]), dtype=np.float32)
+        right_elbow = np.asarray(joints.get("right_elbow", [0, 0, 0]), dtype=np.float32)
+        right_wrist = np.asarray(joints.get("right_wrist", [0, 0, 0]), dtype=np.float32)
+        body_up = np.asarray(pose.get("torso", {}).get("body_up", [0, 1, 0]), dtype=np.float32)
+        
+        # Normalize body_up if needed
+        if np.linalg.norm(body_up) < 1e-8:
+            body_up = np.array([0.0, 1.0, 0.0], dtype=np.float32)
+        else:
+            body_up = body_up / np.linalg.norm(body_up)
+        
+        # Feature 1: Elbow height relative to shoulder
+        # Positive body_up component means higher; negative means lower
+        elbow_displacement = right_elbow - right_shoulder
+        elbow_height = np.dot(elbow_displacement, body_up)  # Project onto vertical axis
+        
+        # # Normalize height to 0-1 range
+        # # Assume shoulder to elbow distance ~ 0.3, so height ranges -0.3 to +0.3
+        # height_normalized = np.clip((elbow_height + 0.15) / 0.30, 0.0, 1.0)
+        # --- Normalize by actual upper arm length ---
+        upper_arm_length = np.linalg.norm(right_elbow - right_shoulder)
+
+        if upper_arm_length < 1e-6:
+            height_normalized = 0.5  # fallback
+        else:
+            h_norm = elbow_height / upper_arm_length  # now roughly [-1, 1]
+
+            # --- Asymmetric bounds (tune these) ---
+            lower_bound = -0.8   # E string extreme
+            upper_bound = 0.3    # G string extreme
+
+            # Clamp to realistic playing range
+            h_clamped = np.clip(h_norm, lower_bound, upper_bound)
+
+            # Rescale to [0, 1]
+            height_normalized = (h_clamped - lower_bound) / (upper_bound - lower_bound)
+        
+        # Feature 2: Shoulder abduction angle
+        # Calculate upper arm vector (shoulder → elbow)
+        upper_arm = self._normalize(right_elbow - right_shoulder)
+        
+        # Calculate horizontal plane (perpendicular to body_up)
+        # Angle from vertical (body_up): 0° = arm pointing up/down (vertical), 90° = arm horizontal
+        # Use absolute value of dot product to get angle magnitude
+        dot_product = np.dot(upper_arm, body_up)
+        angle_from_vertical = np.arccos(np.clip(abs(dot_product), 0.0, 1.0))
+        angle_normalized = np.clip(angle_from_vertical / (np.pi / 2.0), 0.0, 1.0)  # 0-1
+        
+        # Combine features: 60% height + 40% abduction angle
+        # This gives more weight to how high the elbow is
+        arm_elevation = 0.7 * height_normalized + 0.3 * angle_normalized
+        
+        # Apply EMA smoothing for temporal stability
+        if self._arm_elevation_ema is None:
+            self._arm_elevation_ema = arm_elevation
+        self._arm_elevation_ema = 0.6 * self._arm_elevation_ema + 0.4 * arm_elevation
+        
+        # Map arm elevation to string using thresholds
+        # arm_elevation goes from 0 (E string) to 1 (G string)
+        if self._arm_elevation_ema < self._arm_elevation_thresholds["E"]:
+            return "E"
+        elif self._arm_elevation_ema < self._arm_elevation_thresholds["A"]:
+            # Interpolate between E and A
+            if self._arm_elevation_ema < (self._arm_elevation_thresholds["E"] + self._arm_elevation_thresholds["A"]) / 2:
+                return "E"
+            else:
+                return "A"
+        elif self._arm_elevation_ema < self._arm_elevation_thresholds["D"]:
+            # Interpolate between A and D
+            if self._arm_elevation_ema < (self._arm_elevation_thresholds["A"] + self._arm_elevation_thresholds["D"]) / 2:
+                return "A"
+            else:
+                return "D"
+        elif self._arm_elevation_ema < self._arm_elevation_thresholds["G"]:
+            # Interpolate between D and G
+            if self._arm_elevation_ema < (self._arm_elevation_thresholds["D"] + self._arm_elevation_thresholds["G"]) / 2:
+                return "D"
+            else:
+                return "G"
+        else:
+            return "G"
 
     def _estimate_string_from_local(self, lateral_z: float) -> str:
         for name, cz in self._string_centers.items():

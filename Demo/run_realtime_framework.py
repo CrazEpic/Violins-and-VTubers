@@ -146,14 +146,16 @@ def _normalize_quat(q: np.ndarray) -> np.ndarray:
 
 
 def _normalized_to_camera(point, width: int, height: int, intrinsics: Dict[str, float], depth_scale: float = 1.0, depth_base: float = 0.8):
-    u = float(point[0]) * width
-    v = float(point[1]) * height
-    z_norm = float(point[2]) if len(point) > 2 else 0.0
-
-    z = max(0.05, depth_base + (-z_norm) * depth_scale)
-    x = (u - intrinsics["cx"]) * z / intrinsics["fx"]
-    y = (v - intrinsics["cy"]) * z / intrinsics["fy"]
-    return [float(x), float(y), float(z)]
+    # Keep MediaPipe normalized coordinates (0-1 range) - this is what Unity expects
+    # Just pass through x, y, z directly without camera projection
+    x = float(point[0])  # 0 = left, 1 = right
+    y = -float(point[1])  # 0 = top, 1 = bottom (in image space)
+    z = float(point[2]) if len(point) > 2 else 0.5  # 0 = near, 1 = far
+    
+    # Invert Y to match world space convention (up = negative in image coords)
+    y = 1.0 - y
+    
+    return [x, y, z]
 
 
 def _build_human_measurements(state, width: int, height: int, intrinsics: Dict[str, float]) -> Dict[str, JointMeasurement]:
@@ -267,8 +269,10 @@ def run(args) -> None:
 
             frame_h, frame_w = frame.shape[:2]
             if intrinsics is None:
-                fx = args.fx if args.fx > 0 else float(frame_w)
-                fy = args.fy if args.fy > 0 else float(frame_h)
+                # Improved defaults: typical webcam has FOV ~60-70 degrees
+                # This corresponds to focal length ≈ 0.7-0.8 * frame width
+                fx = args.fx if args.fx > 0 else float(frame_w) * 0.7
+                fy = args.fy if args.fy > 0 else float(frame_h) * 0.7
                 cx = args.cx if args.cx >= 0 else float(frame_w) * 0.5
                 cy = args.cy if args.cy >= 0 else float(frame_h) * 0.5
                 intrinsics = {"fx": fx, "fy": fy, "cx": cx, "cy": cy}
@@ -329,6 +333,25 @@ def run(args) -> None:
                 "confidence": float(filtered_inst.get("confidence", 0.0)),
             }
 
+            # Build raw measurement dict (use raw state, not smoothed, to avoid timing issues)
+            raw_measurements = _build_human_measurements(state, frame_w, frame_h, intrinsics)
+            
+            # Convert to hybrid state format for broadcasting
+            human_joints = {
+                key: {
+                    "position": meas.position,
+                    "rotation": meas.rotation,
+                    "confidence": meas.confidence,
+                }
+                for key, meas in raw_measurements.items()
+            }
+            
+            hybrid_output = {
+                "human_joints": human_joints,
+                "instrument": {"position": [0, 0, 0], "rotation": [0, 0, 0, 1], "confidence": 0},
+                "contacts": {},
+            }
+            
             broadcaster.send_hybrid_state(hybrid_output)
 
             if args.show_cv:

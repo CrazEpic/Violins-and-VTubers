@@ -1,22 +1,59 @@
 using UnityEngine;
 
+/// <summary>
+/// Enhanced AvatarController with per-body-part enable/disable and debugging.
+/// Receives motion capture data from MediapipeUDP and applies to humanoid rig.
+/// </summary>
 public class AvatarController : MonoBehaviour
 {
     public Animator animator;
 
-    public bool debugMode = false;
+    [Header("Body Part Tracking")]
+    public bool enableTorso = true;
+    public bool enableArms = true;
+    public bool enableLegs = true;
+    public bool enableHands = true;
+    public bool enableInstrumentConstraints = true;
+
+    [Header("Smoothing")]
     public float smoothFactor = 15f;
     public float playingModeConstraintWeight = 0.95f;
 
+    [Header("Debug")]
+    public bool debugMode = false;
+    public bool logFrameData = false;
+    private int frameCounter = 0;
+
     void LateUpdate()
     {
-        if (animator == null || InstanceManager.Instance.mediapipeUDP == null) return;
+        if (animator == null || InstanceManager.Instance == null || InstanceManager.Instance.mediapipeUDP == null)
+        {
+            if (debugMode && frameCounter % 60 == 0)
+                Debug.LogWarning("AvatarController: Missing animator or MediapipeUDP reference");
+            return;
+        }
 
-        // ApplyTorso();
-        // ApplyArms();
-        // ApplyLegs();
-        ApplyHands();
-        ApplyInstrumentConstraints();
+        MediapipeUDP udp = InstanceManager.Instance.mediapipeUDP;
+
+        if (!udp.hybridStateValid)
+        {
+            if (debugMode && frameCounter % 60 == 0)
+                Debug.LogWarning("AvatarController: hybridStateValid is false - no data received");
+            return;
+        }
+
+        if (enableTorso) ApplyTorso();
+        if (enableArms) ApplyArms();
+        if (enableLegs) ApplyLegs();
+        if (enableHands) ApplyHands();
+        if (enableInstrumentConstraints) ApplyInstrumentConstraints();
+
+        frameCounter++;
+        if (logFrameData && frameCounter % 60 == 0)
+        {
+            int jointCount = udp.hybridJointPositions.Count;
+            Debug.Log($"Frame {frameCounter}: Active joints={jointCount}, Instrument conf={udp.instrumentConfidence:F2}");
+        }
     }
 
     Vector3 L(MediapipeUDP.PoseLandmark l)
@@ -28,6 +65,17 @@ public class AvatarController : MonoBehaviour
             return p;
         }
         return Vector3.zero;
+    }
+
+    float GetPoseConfidence(MediapipeUDP.PoseLandmark l)
+    {
+        MediapipeUDP udp = InstanceManager.Instance.mediapipeUDP;
+        string key = $"pose_{(int)l}";
+        if (udp.hybridJointConfidences.TryGetValue(key, out float c))
+        {
+            return c;
+        }
+        return 0f;
     }
 
     Vector3 H(MediapipeUDP.HandLandmark h, bool left = true)

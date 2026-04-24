@@ -1,0 +1,30 @@
+{
+  "name": "nuxt-app",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@mediapipe/camera_utils": "^0.3.1675466862",
+    "@mediapipe/drawing_utils": "^0.3.1675466124",
+    "@mediapipe/holistic": "^0.5.1675471629",
+    "@nuxt/ui": "^4.6.1",
+    "@pixiv/three-vrm": "^3.5.2",
+    "kalidokit": "^1.1.5",
+    "nuxt": "^4.4.2",
+    "tailwindcss": "^4.2.4",
+    "three": "^0.184.0",
+    "vue": "^3.5.32",
+    "vue-router": "^5.0.4"
+  },
+  "devDependencies": {
+    "@types/three": "^0.184.0",
+    "prettier": "^3.8.3",
+    "prettier-plugin-tailwindcss": "^0.0.0-insiders.f7d2598"
+  }
+}

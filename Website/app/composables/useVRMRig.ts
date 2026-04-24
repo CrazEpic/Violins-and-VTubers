@@ -298,7 +298,7 @@ export const useVRMRig = (vrm: VRM | null, options: RigOptions = {}) => {
 
 		if (results.poseLandmarks) {
 			// applyTorso(results.poseLandmarks)
-			// applyArms(results.poseLandmarks)
+			applyArms(results.poseLandmarks)
 			// applyLegs(results.poseLandmarks)
 		}
 

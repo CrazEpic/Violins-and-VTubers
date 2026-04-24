@@ -3,6 +3,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js"
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
 import { VRM, VRMLoaderPlugin, VRMUtils } from "@pixiv/three-vrm"
 import { ref } from "vue"
+import { usePropCalibration } from "@/composables/usePropCalibration"
 
 export const useThreeScene = (hostRef: any) => {
 	const scene = ref<THREE.Scene | null>(null)
@@ -10,11 +11,13 @@ export const useThreeScene = (hostRef: any) => {
 	const renderer = ref<any>(null)
 	const controls = ref<OrbitControls | null>(null)
 	const currentVrm = ref<VRM | null>(null)
+	const propTools = usePropCalibration(scene)
 
 	let clock = new THREE.Clock()
 	let raf = 0
 	const originalMaterials = new Map<THREE.Mesh, THREE.Material | THREE.Material[]>()
 	let wireframeMode = false
+
 
 	const init = async () => {
 		scene.value = new THREE.Scene()
@@ -37,6 +40,22 @@ export const useThreeScene = (hostRef: any) => {
 		scene.value.add(light)
 
 		scene.value.add(new THREE.AxesHelper(1))
+
+		const loader = new GLTFLoader()
+		const gltf = await loader.loadAsync("violin/scene.gltf")
+		scene.value.add(gltf.scene)
+		propTools.splitViolinAndBow(gltf.scene)
+
+		const violinEndpoint = new THREE.SphereGeometry(0.01, 16, 16)
+		const violinEndpointMat = new THREE.MeshBasicMaterial({ color: 0xff0000 })
+		const violinEndpointMesh = new THREE.Mesh(violinEndpoint, violinEndpointMat)
+		violinEndpoint.translate(0, 0, 0.575)
+		scene.value.add(violinEndpointMesh)
+		const bowEndpoint = new THREE.SphereGeometry(0.01, 16, 16)
+		const bowEndpointMat = new THREE.MeshBasicMaterial({ color: 0x0000ff })
+		const bowEndpointMesh = new THREE.Mesh(bowEndpoint, bowEndpointMat)
+		bowEndpoint.translate(0, 0, 0.64)
+		scene.value.add(bowEndpointMesh)
 
 		window.addEventListener("resize", resize)
 		resize()
@@ -135,6 +154,7 @@ export const useThreeScene = (hostRef: any) => {
 		renderer.value?.dispose()
 		controls.value?.dispose()
 		currentVrm.value = null
+		propTools.dispose()
 	}
 
 	return {
@@ -146,6 +166,18 @@ export const useThreeScene = (hostRef: any) => {
 		loadVRM,
 		update,
 		setWireframeMode,
+		setPropCalibration: propTools.setPropCalibration,
+		setPropParentDefaults: propTools.setPropParentDefaults,
+		getPropCalibration: propTools.getPropCalibration,
+		getPropParentDefaults: propTools.getPropParentDefaults,
+		resetPropCalibration: propTools.resetPropCalibration,
+		resetPropParentDefaults: propTools.resetPropParentDefaults,
+		bakeCalibrationIntoParentDefaults: propTools.bakeCalibrationIntoParentDefaults,
+		getPropMeasurement: propTools.getPropMeasurement,
+		fitPropZLengthCm: propTools.fitPropZLengthCm,
+		exportPropCalibration: propTools.exportPropCalibration,
+		importPropCalibration: propTools.importPropCalibration,
+		getPropDiagnostics: propTools.getPropDiagnostics,
 		dispose,
 	}
 }

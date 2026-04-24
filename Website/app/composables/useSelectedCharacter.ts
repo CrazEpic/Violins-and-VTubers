@@ -5,6 +5,7 @@ export interface Character {
 	name: string
 	description: string
 	model: string
+	image: string
 }
 
 const selectedCharacter = ref<Character | null>(null)

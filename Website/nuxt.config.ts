@@ -18,7 +18,6 @@ export default defineNuxtConfig({
 				"@mediapipe/holistic", // CJS
 				"@mediapipe/camera_utils", // CJS
 				"@mediapipe/drawing_utils", // CJS
-				"kalidokit",
 				"three/webgpu",
 			],
 		},

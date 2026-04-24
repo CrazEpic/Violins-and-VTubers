@@ -1,11 +1,5 @@
 <template>
-	<div>
-		<VRMTracker
-			v-if="selectedCharacter"
-			:model-path="selectedCharacter.model"
-			@quit="returnToLobby"
-		/>
-	</div>
+	<VRMTracker v-if="selectedCharacter" :model-path="selectedCharacter.model" @quit="returnToLobby" />
 </template>
 
 <script setup lang="ts">

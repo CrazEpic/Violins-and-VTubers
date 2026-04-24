@@ -6,9 +6,9 @@ export const useTrackerState = () => {
 
 	const steps = ["Initializing scene", "Loading 3D model", "Setting up MediaPipe", "Starting camera", "Ready!"]
 
-    const progress = computed(() => {
-        return (step.value / (steps.length - 1)) * 100
-    })
+	const progress = computed(() => {
+		return (step.value / (steps.length - 1)) * 100
+	})
 
 	const setStep = (index: number) => {
 		step.value = index

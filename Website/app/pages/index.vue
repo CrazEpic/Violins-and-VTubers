@@ -7,7 +7,7 @@
 					<p class="mt-2 text-slate-300">Select your character to begin</p>
 				</div>
 
-				<div class="grid gap-6 grid-cols-2">
+				<div class="grid grid-cols-2 gap-6">
 					<UCard v-for="character in characters" :key="character.id">
 						<div class="space-y-4">
 							<div class="flex aspect-square w-full items-center justify-center rounded-md bg-slate-700">

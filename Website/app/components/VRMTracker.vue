@@ -3,15 +3,31 @@
 		<!-- THREE RENDERER -->
 		<div ref="rendererHost" class="h-full w-full" />
 
-		<!-- QUIT BUTTON -->
-		<div class="absolute top-4 right-4 z-50">
-			<UButton icon="i-lucide-log-out" color="red" variant="outline" @click="$emit('quit')"> Quit </UButton>
+<!-- DEBUG CONTROLS -->
+	<div class="absolute top-4 right-4 z-50 flex gap-2">
+		<UButton
+			:icon="showBoneAxes ? 'i-lucide-check' : 'i-lucide-plus'"
+			:color="showBoneAxes ? 'green' : 'gray'"
+			variant="outline"
+			@click="toggleBoneAxes"
+		>
+			Axes
+		</UButton>
+		<UButton
+			:icon="showWireframe ? 'i-lucide-check' : 'i-lucide-plus'"
+			:color="showWireframe ? 'green' : 'gray'"
+			variant="outline"
+			@click="toggleWireframe"
+		>
+			Wireframe
+		</UButton>
+			<UButton icon="i-lucide-log-out" color="error" variant="outline" @click="$emit('quit')"> Quit </UButton>
 		</div>
 
 		<!-- LOADING OVERLAY -->
 		<Transition name="fade">
 			<div v-if="tracker.isLoading.value" class="absolute inset-0 z-40 flex items-center justify-center bg-black/80 backdrop-blur">
-				<UCard class="w-[420px] space-y-6 p-6">
+				<UCard class="w-105 space-y-6 p-6">
 					<div class="space-y-1 text-center">
 						<h1 class="text-xl font-semibold text-white">Loading VRM Tracker</h1>
 						<p class="text-sm text-gray-400">
@@ -48,7 +64,7 @@
 		</Transition>
 
 		<!-- CAMERA PREVIEW -->
-		<div class="absolute right-4 bottom-4 w-[280px] overflow-hidden rounded-lg border border-white/10 bg-black shadow-lg">
+		<div class="absolute right-4 bottom-4 w-70 overflow-hidden rounded-lg border border-white/10 bg-black shadow-lg">
 			<video ref="videoElement" autoplay muted playsinline class="w-full scale-x-[-1]" />
 			<canvas ref="guideCanvas" class="absolute inset-0 w-full scale-x-[-1]" />
 		</div>
@@ -61,22 +77,39 @@ import { ref, onMounted, onUnmounted } from "vue"
 import { useThreeScene } from "@/composables/useThreeScene"
 import { useMediaPipeHolistic } from "@/composables/useMediaPipeHolistic"
 import { useTrackerState } from "@/composables/useTrackerState"
+import { usePoseStream } from "@/composables/usePoseStream"
+import { useVRMRig } from "@/composables/useVRMRig"
 import { useRuntimeConfig } from "#app"
 
-const props = defineProps<{ modelPath: string }>()
+const props = withDefaults(defineProps<{ modelPath: string; debugMode?: boolean; smoothFactor?: number }>(), {
+	debugMode: false,
+	smoothFactor: 15,
+})
 defineEmits(["quit"])
 
 const rendererHost = ref()
 const videoElement = ref()
 const guideCanvas = ref()
+const showBoneAxes = ref(false)
+const showWireframe = ref(false)
 
 const tracker = useTrackerState()
 const three = useThreeScene(rendererHost)
-const mp = useMediaPipeHolistic(videoElement)
+const mp = useMediaPipeHolistic(videoElement, guideCanvas)
 const pose = usePoseStream()
-let vrmRig
+let vrmRig: any = null
 
 let vrm: any = null
+
+const toggleBoneAxes = () => {
+	showBoneAxes.value = !showBoneAxes.value
+	vrmRig?.setShowBoneAxes(showBoneAxes.value)
+}
+
+const toggleWireframe = () => {
+	showWireframe.value = !showWireframe.value
+	three.setWireframeMode(showWireframe.value)
+}
 
 onMounted(async () => {
 	const config = useRuntimeConfig()
@@ -90,7 +123,11 @@ onMounted(async () => {
 	tracker.setStep(1)
 	vrm = await three.loadVRM(`${base}${props.modelPath}`)
 
-	vrmRig = useVRMRig(vrm)
+	vrmRig = useVRMRig(vrm, {
+		debugMode: props.debugMode,
+		smoothFactor: props.smoothFactor,
+		showBoneAxes: showBoneAxes.value,
+	})
 
 	// 3. MediaPipe
 	tracker.setStep(2)
@@ -98,7 +135,7 @@ onMounted(async () => {
 
 	mp.setOnResults((results) => {
 		pose.update(results)
-		// vrmRig.update()
+		vrmRig?.update(results)
 	})
 
 	// 4. Camera

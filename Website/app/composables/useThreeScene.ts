@@ -9,9 +9,12 @@ export const useThreeScene = (hostRef: any) => {
 	const camera = ref<THREE.PerspectiveCamera | null>(null)
 	const renderer = ref<any>(null)
 	const controls = ref<OrbitControls | null>(null)
+	const currentVrm = ref<VRM | null>(null)
 
 	let clock = new THREE.Clock()
 	let raf = 0
+	const originalMaterials = new Map<THREE.Mesh, THREE.Material | THREE.Material[]>()
+	let wireframeMode = false
 
 	const init = async () => {
 		scene.value = new THREE.Scene()
@@ -33,7 +36,7 @@ export const useThreeScene = (hostRef: any) => {
 		light.position.set(1, 1, 1).normalize()
 		scene.value.add(light)
 
-        scene.value.add(new THREE.AxesHelper(1))
+		scene.value.add(new THREE.AxesHelper(1))
 
 		window.addEventListener("resize", resize)
 		resize()
@@ -57,6 +60,10 @@ export const useThreeScene = (hostRef: any) => {
 	const startLoop = () => {
 		const loop = () => {
 			raf = requestAnimationFrame(loop)
+			const delta = clock.getDelta()
+			if (currentVrm.value) {
+				currentVrm.value.update(delta)
+			}
 
 			renderer.value?.render(scene.value!, camera.value!)
 		}
@@ -65,7 +72,7 @@ export const useThreeScene = (hostRef: any) => {
 
 	const loadVRM = async (path: string): Promise<VRM | null> => {
 		const loader = new GLTFLoader()
-		loader.register((p) => new VRMLoaderPlugin(p))
+		loader.register((parser) => new VRMLoaderPlugin(parser))
 
 		const gltf: any = await new Promise((resolve, reject) => {
 			loader.load(path, resolve, undefined, reject)
@@ -79,8 +86,43 @@ export const useThreeScene = (hostRef: any) => {
 
 		scene.value?.add(vrm.scene)
 		vrm.scene.rotation.y = Math.PI
+		currentVrm.value = vrm
+
+		// Store original materials for wireframe toggle
+		vrm.scene.traverse((obj: any) => {
+			if (obj.isMesh && obj.material) {
+				originalMaterials.set(obj, obj.material)
+			}
+		})
 
 		return vrm
+	}
+
+	const setWireframeMode = (enabled: boolean) => {
+		wireframeMode = enabled
+		if (!currentVrm.value) return
+
+		currentVrm.value.scene.traverse((obj: any) => {
+			if (obj.isMesh) {
+				if (enabled) {
+					// Create wireframe material
+					if (!obj.userData.wireframeMaterial) {
+						obj.userData.wireframeMaterial = new THREE.MeshPhongMaterial({
+							wireframe: true,
+							color: 0xffffff,
+							emissive: 0x333333,
+						})
+					}
+					obj.material = obj.userData.wireframeMaterial
+				} else {
+					// Restore original material
+					const originalMat = originalMaterials.get(obj)
+					if (originalMat) {
+						obj.material = originalMat
+					}
+				}
+			}
+		})
 	}
 
 	const update = (delta: number, vrm?: VRM | null) => {
@@ -92,6 +134,7 @@ export const useThreeScene = (hostRef: any) => {
 		window.removeEventListener("resize", resize)
 		renderer.value?.dispose()
 		controls.value?.dispose()
+		currentVrm.value = null
 	}
 
 	return {
@@ -102,6 +145,7 @@ export const useThreeScene = (hostRef: any) => {
 		init,
 		loadVRM,
 		update,
+		setWireframeMode,
 		dispose,
 	}
 }

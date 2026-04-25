@@ -76,7 +76,7 @@ export const useViolinPose = () => {
 			rotationDeg: {
 				x: THREE.MathUtils.radToDeg(rotation.x),
 				y: THREE.MathUtils.radToDeg(rotation.y),
-				z: THREE.MathUtils.radToDeg(rotation.z),
+				z: THREE.MathUtils.radToDeg(rotation.z + Math.PI*5/4),
 			},
 			scale: { x: 1, y: 1, z: 1 },
 		}

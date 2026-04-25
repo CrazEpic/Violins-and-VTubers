@@ -1,6 +1,7 @@
 import * as THREE from "three"
 import { VRM, VRMHumanBoneName } from "@pixiv/three-vrm"
 import { type HolisticResults, type LandmarkPoint, HandLandmark, PoseLandmark, getHandLandmark, getPoseLandmark } from "@/utils/landmarks"
+import { normalizeHolisticResults } from "@/utils/landmarkTransforms"
 
 type RigOptions = {
 	smoothFactor?: number
@@ -290,7 +291,8 @@ export const useVRMRig = (vrm: VRM | null, options: RigOptions = {}) => {
 		applyHandChain(leftHandLandmarks, true)
 	}
 
-	const update = (results: HolisticResults) => {
+	const update = (rawResults: HolisticResults) => {
+		const results = normalizeHolisticResults(rawResults)
 		// Initialize axes on first update (they're added but hidden/shown via setShowBoneAxes)
 		if (!axesInitialized) {
 			initializeBoneAxes()

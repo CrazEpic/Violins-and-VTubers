@@ -19,7 +19,7 @@ const AXIS = {
 }
 
 export const useVRMRig = (vrm: VRM | null, options: RigOptions = {}) => {
-	const smoothFactor = options.smoothFactor ?? 15
+	const smoothFactor = 100//options.smoothFactor ?? 15
 	// const debugMode = options.debugMode ?? false
 	const debugMode = true
 	let lastUpdateAt = performance.now()
@@ -142,6 +142,32 @@ export const useVRMRig = (vrm: VRM | null, options: RigOptions = {}) => {
 		return Math.min(1, deltaSeconds * smoothFactor)
 	}
 
+	// compute full wrist orientation from hand landmarks
+	const computeWristQuat = (handLandmarks: LandmarkPoint[]): THREE.Quaternion | null => {
+	const wrist = handLandmarks[0];
+	const indexMCP = handLandmarks[5];   // index finger MCP
+	const thumbMCP = handLandmarks[2];   // thumb MCP
+	if (!wrist || !indexMCP || !thumbMCP) return null;
+
+	const posWrist = new THREE.Vector3(wrist.x, wrist.y, wrist.z ?? 0);
+	const posIndex = new THREE.Vector3(indexMCP.x, indexMCP.y, indexMCP.z ?? 0);
+	const posThumb = new THREE.Vector3(thumbMCP.x, thumbMCP.y, thumbMCP.z ?? 0);
+
+	// Forward: wrist → index MCP (flexion/extension)
+	let forward = new THREE.Vector3().subVectors(posIndex, posWrist).normalize();
+	// Right: wrist → thumb MCP (radial/ulnar deviation)
+	let right = new THREE.Vector3().subVectors(posThumb, posWrist).normalize();
+
+	// Orthogonalize: recompute up = cross(right, forward), then right = cross(forward, up)
+	const up = new THREE.Vector3().crossVectors(right, forward).normalize();
+	const finalRight = new THREE.Vector3().crossVectors(forward, up).normalize();
+
+	// Build rotation matrix (X = right, Y = up, Z = forward) – adjust order to match VRM hand
+	const matrix = new THREE.Matrix4();
+	matrix.makeBasis(finalRight, up, forward);
+	return new THREE.Quaternion().setFromRotationMatrix(matrix);
+	};
+
 	const applyWorldRotation = (name: keyof typeof VRMHumanBoneName, targetWorldRotation: THREE.Quaternion, lerp: number) => {
 		const bone = getBone(name)
 		if (!bone) return
@@ -257,36 +283,36 @@ export const useVRMRig = (vrm: VRM | null, options: RigOptions = {}) => {
 
 		const lerp = nextLerp()
 		const thumbAxis = isLeftAvatarHand ? new THREE.Vector3(-1, 0, 1).normalize() : new THREE.Vector3(1, 0, 1).normalize()
-		// const fingerAxis = isLeftAvatarHand ? AXIS.xNegative : AXIS.xPositive
-		const fingerAxis = isLeftAvatarHand ? AXIS.xPositive : AXIS.xNegative
+		const fingerAxis = isLeftAvatarHand ? AXIS.xNegative : AXIS.xPositive
+		//const fingerAxis = isLeftAvatarHand ? AXIS.xPositive : AXIS.xNegative
 
-		// applyDirection(isLeftAvatarHand ? "LeftThumbMetacarpal" : "RightThumbMetacarpal", thumbAxis, vectorBetween(handLandmarks, HandLandmark.ThumbCMC, HandLandmark.ThumbMCP), lerp)
-		// applyDirection(isLeftAvatarHand ? "LeftThumbProximal" : "RightThumbProximal", thumbAxis, vectorBetween(handLandmarks, HandLandmark.ThumbMCP, HandLandmark.ThumbIP), lerp)
-		// applyDirection(isLeftAvatarHand ? "LeftThumbDistal" : "RightThumbDistal", thumbAxis, vectorBetween(handLandmarks, HandLandmark.ThumbIP, HandLandmark.ThumbTIP), lerp)
+		// Thumb
+		applyDirection(isLeftAvatarHand ? "LeftThumbMetacarpal" : "RightThumbMetacarpal", thumbAxis, vectorBetween(handLandmarks, HandLandmark.ThumbCMC, HandLandmark.ThumbMCP), lerp)
+		applyDirection(isLeftAvatarHand ? "LeftThumbProximal" : "RightThumbProximal", thumbAxis, vectorBetween(handLandmarks, HandLandmark.ThumbMCP, HandLandmark.ThumbIP), lerp)
+		applyDirection(isLeftAvatarHand ? "LeftThumbDistal" : "RightThumbDistal", thumbAxis, vectorBetween(handLandmarks, HandLandmark.ThumbIP, HandLandmark.ThumbTIP), lerp)
 
+		// Index finger
 		applyDirection(isLeftAvatarHand ? "LeftIndexProximal" : "RightIndexProximal", fingerAxis, vectorBetween(handLandmarks, HandLandmark.IndexFingerMCP, HandLandmark.IndexFingerPIP), lerp)
 		applyDirection(isLeftAvatarHand ? "LeftIndexIntermediate" : "RightIndexIntermediate", fingerAxis, vectorBetween(handLandmarks, HandLandmark.IndexFingerPIP, HandLandmark.IndexFingerDIP), lerp)
 		applyDirection(isLeftAvatarHand ? "LeftIndexDistal" : "RightIndexDistal", fingerAxis, vectorBetween(handLandmarks, HandLandmark.IndexFingerDIP, HandLandmark.IndexFingerTIP), lerp)
 
-		// applyDirection(isLeftAvatarHand ? "LeftMiddleProximal" : "RightMiddleProximal", fingerAxis, vectorBetween(handLandmarks, HandLandmark.MiddleFingerMCP, HandLandmark.MiddleFingerPIP), lerp)
-		// applyDirection(
-		// 	isLeftAvatarHand ? "LeftMiddleIntermediate" : "RightMiddleIntermediate",
-		// 	fingerAxis,
-		// 	vectorBetween(handLandmarks, HandLandmark.MiddleFingerPIP, HandLandmark.MiddleFingerDIP),
-		// 	lerp
-		// )
-		// applyDirection(isLeftAvatarHand ? "LeftMiddleDistal" : "RightMiddleDistal", fingerAxis, vectorBetween(handLandmarks, HandLandmark.MiddleFingerDIP, HandLandmark.MiddleFingerTIP), lerp)
+		// Middle finger
+		applyDirection(isLeftAvatarHand ? "LeftMiddleProximal" : "RightMiddleProximal", fingerAxis, vectorBetween(handLandmarks, HandLandmark.MiddleFingerMCP, HandLandmark.MiddleFingerPIP), lerp)
+		applyDirection(isLeftAvatarHand ? "LeftMiddleIntermediate" : "RightMiddleIntermediate", fingerAxis, vectorBetween(handLandmarks, HandLandmark.MiddleFingerPIP, HandLandmark.MiddleFingerDIP), lerp)
+		applyDirection(isLeftAvatarHand ? "LeftMiddleDistal" : "RightMiddleDistal", fingerAxis, vectorBetween(handLandmarks, HandLandmark.MiddleFingerDIP, HandLandmark.MiddleFingerTIP), lerp)
 
-		// applyDirection(isLeftAvatarHand ? "LeftRingProximal" : "RightRingProximal", fingerAxis, vectorBetween(handLandmarks, HandLandmark.RingFingerMCP, HandLandmark.RingFingerPIP), lerp)
-		// applyDirection(isLeftAvatarHand ? "LeftRingIntermediate" : "RightRingIntermediate", fingerAxis, vectorBetween(handLandmarks, HandLandmark.RingFingerPIP, HandLandmark.RingFingerDIP), lerp)
-		// applyDirection(isLeftAvatarHand ? "LeftRingDistal" : "RightRingDistal", fingerAxis, vectorBetween(handLandmarks, HandLandmark.RingFingerDIP, HandLandmark.RingFingerTIP), lerp)
+		// Ring finger
+		applyDirection(isLeftAvatarHand ? "LeftRingProximal" : "RightRingProximal", fingerAxis, vectorBetween(handLandmarks, HandLandmark.RingFingerMCP, HandLandmark.RingFingerPIP), lerp)
+		applyDirection(isLeftAvatarHand ? "LeftRingIntermediate" : "RightRingIntermediate", fingerAxis, vectorBetween(handLandmarks, HandLandmark.RingFingerPIP, HandLandmark.RingFingerDIP), lerp)
+		applyDirection(isLeftAvatarHand ? "LeftRingDistal" : "RightRingDistal", fingerAxis, vectorBetween(handLandmarks, HandLandmark.RingFingerDIP, HandLandmark.RingFingerTIP), lerp)
 
-		// applyDirection(isLeftAvatarHand ? "LeftLittleProximal" : "RightLittleProximal", fingerAxis, vectorBetween(handLandmarks, HandLandmark.PinkyMCP, HandLandmark.PinkyPIP), lerp)
-		// applyDirection(isLeftAvatarHand ? "LeftLittleIntermediate" : "RightLittleIntermediate", fingerAxis, vectorBetween(handLandmarks, HandLandmark.PinkyPIP, HandLandmark.PinkyDIP), lerp)
-		// applyDirection(isLeftAvatarHand ? "LeftLittleDistal" : "RightLittleDistal", fingerAxis, vectorBetween(handLandmarks, HandLandmark.PinkyDIP, HandLandmark.PinkyTIP), lerp)
+		// Pinky
+		applyDirection(isLeftAvatarHand ? "LeftLittleProximal" : "RightLittleProximal", fingerAxis, vectorBetween(handLandmarks, HandLandmark.PinkyMCP, HandLandmark.PinkyPIP), lerp)
+		applyDirection(isLeftAvatarHand ? "LeftLittleIntermediate" : "RightLittleIntermediate", fingerAxis, vectorBetween(handLandmarks, HandLandmark.PinkyPIP, HandLandmark.PinkyDIP), lerp)
+		applyDirection(isLeftAvatarHand ? "LeftLittleDistal" : "RightLittleDistal", fingerAxis, vectorBetween(handLandmarks, HandLandmark.PinkyDIP, HandLandmark.PinkyTIP), lerp)
 	}
 
-	const applyRightHandBowGrip = () => {
+	const applyRightHandBowGrip = (handLandmarks: LandmarkPoint[] | null | undefined, isLeftAvatarHand: boolean) => {
 		const setBoneRotation = (boneName: keyof typeof VRMHumanBoneName, x: number, y: number, z: number) => {
 			const bone = getBone(boneName)
 			if (bone) {
@@ -328,10 +354,22 @@ export const useVRMRig = (vrm: VRM | null, options: RigOptions = {}) => {
 		setBoneRotation("RightLittleProximal", 0, -0.1, 0.5)
 		setBoneRotation("RightLittleIntermediate", 0, 0, 0.4)
 		setBoneRotation("RightLittleDistal", 0, 0, 0.2)
+
+		if (!handLandmarks) return;
+
+		// Compute full wrist orientation from landmarks
+		const wristQuat = computeWristQuat(handLandmarks);
+		if (wristQuat) {
+		const handBone = getBone("RightHand");
+		if (handBone) {
+			const lerp = nextLerp();
+			handBone.quaternion.slerp(wristQuat, lerp);
+		}
+		}
 	}
 
 	const applyHands = (leftHandLandmarks: LandmarkPoint[] | null | undefined, rightHandLandmarks: LandmarkPoint[] | null | undefined) => {
-		applyRightHandBowGrip()
+		applyRightHandBowGrip(rightHandLandmarks, false)
 		applyHandChain(leftHandLandmarks, true)
 	}
 

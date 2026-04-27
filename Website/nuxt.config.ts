@@ -9,6 +9,26 @@ export default defineNuxtConfig({
 	app: {
 		baseURL: "/Violins-and-VTubers/",
 	},
+	icon: {
+		provider: "iconify",
+		clientBundle: {
+			scan: true,
+			icons: [
+				"lucide:arrow-left",
+				"lucide:arrow-right",
+				"lucide:check",
+				"lucide:circle",
+				"lucide:clapperboard",
+				"lucide:list-checks",
+				"lucide:loader",
+				"lucide:log-out",
+				"lucide:play",
+				"lucide:plus",
+				"lucide:user-round",
+				"lucide:video",
+			],
+		},
+	},
 	vite: {
 		optimizeDeps: {
 			include: [

@@ -40,15 +40,15 @@ export const useThreeScene = (hostRef: any) => {
 		light.position.set(1, 1, 1).normalize()
 		scene.value.add(light)
 
-		scene.value.add(new THREE.AxesHelper(1))
+		scene.value.add(new THREE.AxesHelper(0.2))
 
 		const loader = new GLTFLoader()
 		const gltf = await loader.loadAsync("violin/scene.gltf")
 		scene.value.add(gltf.scene)
 		propTools.splitViolinAndBow(gltf.scene)
-		propTools.drawViolinKeypoints(getDebugPoints())
+		// propTools.drawViolinKeypoints(getDebugPoints())
 		propTools.drawViolinFingerings(getFingeringPoints(7))
-		propTools.drawViolinReferenceMarkers([0.575, 0.64])
+		// propTools.drawViolinReferenceMarkers([0.575, 0.64])
 
 		window.addEventListener("resize", resize)
 		resize()

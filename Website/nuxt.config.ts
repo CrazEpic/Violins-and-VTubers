@@ -3,6 +3,9 @@ export default defineNuxtConfig({
 	modules: ["@nuxt/ui"],
 	devtools: { enabled: true },
 	css: ["~/assets/css/main.css"],
+	build: {
+		transpile: ["@mediapipe/camera_utils"],
+	},
 	app: {
 		baseURL: "/Violins-and-VTubers",
 	},

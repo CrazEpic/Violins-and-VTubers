@@ -619,8 +619,21 @@ watch(selectedProp, () => {
 
 onMounted(async () => {
 	const config = useRuntimeConfig()
-	const base = config.app.baseURL || "/"
-	const defaultCalibrationUrl = `${base}violinCalibration/prop-calibration.json`
+	const base = (config.app.baseURL || "/").replace(/\/?$/, "/")
+	const resolvePublicUrl = (path: string) => {
+		if (path.startsWith("blob:") || path.startsWith("http")) {
+			return path
+		}
+
+		const normalizedPath = path.replace(/^\/+/, "")
+		const prefixedPath = `/${normalizedPath}`
+		if (prefixedPath.startsWith(base)) {
+			return prefixedPath
+		}
+
+		return `${base}${normalizedPath}`
+	}
+	const defaultCalibrationUrl = resolvePublicUrl("violinCalibration/prop-calibration.json")
 
 	// 1. Scene
 	tracker.setStep(0)
@@ -634,8 +647,7 @@ onMounted(async () => {
 
 	// 2. VRM
 	tracker.setStep(1)
-	// Use blob URLs directly, otherwise prepend base for public folder assets
-	const modelUrl = props.modelPath.startsWith("blob:") || props.modelPath.startsWith("http") ? props.modelPath : `${base}${props.modelPath}`
+	const modelUrl = resolvePublicUrl(props.modelPath)
 	vrm = await three.loadVRM(modelUrl)
 
 	vrmRig = useVRMRig(vrm, {
@@ -660,8 +672,7 @@ onMounted(async () => {
 	// 4. Camera
 	tracker.setStep(3)
 	if (props.inputMode === "video" && props.sourceVideoUrl && videoElement.value) {
-		// Use blob URLs directly, otherwise prepend base for public folder assets
-		const videoUrl = props.sourceVideoUrl.startsWith("blob:") || props.sourceVideoUrl.startsWith("http") ? props.sourceVideoUrl : `${base}${props.sourceVideoUrl}`
+		const videoUrl = resolvePublicUrl(props.sourceVideoUrl)
 		videoElement.value.src = videoUrl
 	}
 	await mp.start(props.inputMode)

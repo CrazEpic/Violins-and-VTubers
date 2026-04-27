@@ -81,6 +81,7 @@ export const useVRMRig = (vrm: VRM | null, options: RigOptions = {}) => {
 	const smoothFactor = options.smoothFactor ?? 15
 	const debugMode = options.debugMode ?? false
 	let lastUpdateAt = performance.now()
+	const smoothedPoints = new Map<string, THREE.Vector3>()
 	const axesHelpers: THREE.AxesHelper[] = []
 	let axesInitialized = false
 
@@ -167,6 +168,22 @@ export const useVRMRig = (vrm: VRM | null, options: RigOptions = {}) => {
 		const z = landmark.z ?? 0
 		if (!Number.isFinite(z)) return null
 		return new THREE.Vector3(landmark.x, landmark.y, z)
+	}
+
+	const lerpVector = (key: string, next: THREE.Vector3 | null, alpha: number) => {
+		if (!next) {
+			smoothedPoints.delete(key)
+			return null
+		}
+
+		const previous = smoothedPoints.get(key)
+		if (!previous) {
+			smoothedPoints.set(key, next.clone())
+			return next.clone()
+		}
+
+		previous.lerp(next, alpha)
+		return previous.clone()
 	}
 
 	const getDirection = (from: THREE.Vector3 | null, to: THREE.Vector3 | null) => {
@@ -280,15 +297,15 @@ export const useVRMRig = (vrm: VRM | null, options: RigOptions = {}) => {
 	}
 
 	const updatePoseRig = (poseLandmarks: LandmarkPoint[], alpha: number) => {
-		const leftShoulder = getLandmarkVector(getPoseLandmark(poseLandmarks, PoseLandmark.LeftShoulder))
-		const rightShoulder = getLandmarkVector(getPoseLandmark(poseLandmarks, PoseLandmark.RightShoulder))
-		const leftElbow = getLandmarkVector(getPoseLandmark(poseLandmarks, PoseLandmark.LeftElbow))
-		const rightElbow = getLandmarkVector(getPoseLandmark(poseLandmarks, PoseLandmark.RightElbow))
-		const leftWrist = getLandmarkVector(getPoseLandmark(poseLandmarks, PoseLandmark.LeftWrist))
-		const rightWrist = getLandmarkVector(getPoseLandmark(poseLandmarks, PoseLandmark.RightWrist))
+		const leftShoulder = lerpVector("pose:leftShoulder", getLandmarkVector(getPoseLandmark(poseLandmarks, PoseLandmark.LeftShoulder)), alpha)
+		const rightShoulder = lerpVector("pose:rightShoulder", getLandmarkVector(getPoseLandmark(poseLandmarks, PoseLandmark.RightShoulder)), alpha)
+		const leftElbow = lerpVector("pose:leftElbow", getLandmarkVector(getPoseLandmark(poseLandmarks, PoseLandmark.LeftElbow)), alpha)
+		const rightElbow = lerpVector("pose:rightElbow", getLandmarkVector(getPoseLandmark(poseLandmarks, PoseLandmark.RightElbow)), alpha)
+		const leftWrist = lerpVector("pose:leftWrist", getLandmarkVector(getPoseLandmark(poseLandmarks, PoseLandmark.LeftWrist)), alpha)
+		const rightWrist = lerpVector("pose:rightWrist", getLandmarkVector(getPoseLandmark(poseLandmarks, PoseLandmark.RightWrist)), alpha)
 
-		const leftHip = getLandmarkVector(getPoseLandmark(poseLandmarks, PoseLandmark.LeftHip))
-		const rightHip = getLandmarkVector(getPoseLandmark(poseLandmarks, PoseLandmark.RightHip))
+		const leftHip = lerpVector("pose:leftHip", getLandmarkVector(getPoseLandmark(poseLandmarks, PoseLandmark.LeftHip)), alpha)
+		const rightHip = lerpVector("pose:rightHip", getLandmarkVector(getPoseLandmark(poseLandmarks, PoseLandmark.RightHip)), alpha)
 		// const leftKnee = getLandmarkVector(getPoseLandmark(poseLandmarks, PoseLandmark.LeftKnee))
 		// const rightKnee = getLandmarkVector(getPoseLandmark(poseLandmarks, PoseLandmark.RightKnee))
 		// const leftAnkle = getLandmarkVector(getPoseLandmark(poseLandmarks, PoseLandmark.LeftAnkle))
@@ -299,9 +316,9 @@ export const useVRMRig = (vrm: VRM | null, options: RigOptions = {}) => {
 		// const leftHeel = getLandmarkVector(getPoseLandmark(poseLandmarks, PoseLandmark.LeftHeel))
 		// const rightHeel = getLandmarkVector(getPoseLandmark(poseLandmarks, PoseLandmark.RightHeel))
 
-		const leftEar = getLandmarkVector(getPoseLandmark(poseLandmarks, PoseLandmark.LeftEar))
-		const rightEar = getLandmarkVector(getPoseLandmark(poseLandmarks, PoseLandmark.RightEar))
-		const nose = getLandmarkVector(getPoseLandmark(poseLandmarks, PoseLandmark.Nose))
+		const leftEar = lerpVector("pose:leftEar", getLandmarkVector(getPoseLandmark(poseLandmarks, PoseLandmark.LeftEar)), alpha)
+		const rightEar = lerpVector("pose:rightEar", getLandmarkVector(getPoseLandmark(poseLandmarks, PoseLandmark.RightEar)), alpha)
+		const nose = lerpVector("pose:nose", getLandmarkVector(getPoseLandmark(poseLandmarks, PoseLandmark.Nose)), alpha)
 
 		const hipsCenter = getCenter(leftHip, rightHip)
 		const shouldersCenter = getCenter(leftShoulder, rightShoulder)
@@ -380,10 +397,11 @@ export const useVRMRig = (vrm: VRM | null, options: RigOptions = {}) => {
 	const updateHandRig = (handLandmarks: LandmarkPoint[] | null | undefined, isRightHand: boolean, alpha: number) => {
 		if (!handLandmarks) return
 
-		const wrist = getLandmarkVector(getHandLandmark(handLandmarks, HandLandmark.Wrist))
-		const indexMcp = getLandmarkVector(getHandLandmark(handLandmarks, HandLandmark.IndexFingerMCP))
-		const middleMcp = getLandmarkVector(getHandLandmark(handLandmarks, HandLandmark.MiddleFingerMCP))
-		const pinkyMcp = getLandmarkVector(getHandLandmark(handLandmarks, HandLandmark.PinkyMCP))
+		const handKey = isRightHand ? "hand:right" : "hand:left"
+		const wrist = lerpVector(`${handKey}:wrist`, getLandmarkVector(getHandLandmark(handLandmarks, HandLandmark.Wrist)), alpha)
+		const indexMcp = lerpVector(`${handKey}:indexMcp`, getLandmarkVector(getHandLandmark(handLandmarks, HandLandmark.IndexFingerMCP)), alpha)
+		const middleMcp = lerpVector(`${handKey}:middleMcp`, getLandmarkVector(getHandLandmark(handLandmarks, HandLandmark.MiddleFingerMCP)), alpha)
+		const pinkyMcp = lerpVector(`${handKey}:pinkyMcp`, getLandmarkVector(getHandLandmark(handLandmarks, HandLandmark.PinkyMCP)), alpha)
 
 		if (wrist && indexMcp && middleMcp && pinkyMcp) {
 			applyHandWristBasis(
@@ -400,9 +418,9 @@ export const useVRMRig = (vrm: VRM | null, options: RigOptions = {}) => {
 		}
 
 		for (const definition of Object.values(FINGER_DEFINITIONS)) {
-			const mcp = getLandmarkVector(getHandLandmark(handLandmarks, definition.mcp))
-			const pip = getLandmarkVector(getHandLandmark(handLandmarks, definition.pip))
-			const dip = getLandmarkVector(getHandLandmark(handLandmarks, definition.dip))
+			const mcp = lerpVector(`${handKey}:${definition.mcp}`, getLandmarkVector(getHandLandmark(handLandmarks, definition.mcp)), alpha)
+			const pip = lerpVector(`${handKey}:${definition.pip}`, getLandmarkVector(getHandLandmark(handLandmarks, definition.pip)), alpha)
+			const dip = lerpVector(`${handKey}:${definition.dip}`, getLandmarkVector(getHandLandmark(handLandmarks, definition.dip)), alpha)
 
 			const [bone0, bone1, bone2] = definition.bones
 			applyBoneBetweenPoints(resolveBoneName(bone0, isRightHand), resolveBoneName(bone1, isRightHand), mcp, pip, alpha)
@@ -447,6 +465,10 @@ export const useVRMRig = (vrm: VRM | null, options: RigOptions = {}) => {
 		}
 
 		vrm?.update(1 / 60)
+
+		if (!poseLandmarks && !results.leftHandLandmarks && !results.rightHandLandmarks) {
+			smoothedPoints.clear()
+		}
 	}
 
 	return {

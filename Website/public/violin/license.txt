@@ -1,0 +1,11 @@
+Model Information:
+* title:	Violin
+* source:	https://sketchfab.com/3d-models/violin-4ea1eb161ce34b3cad5b2aa50428d9f5
+* author:	spaceparmesan (https://sketchfab.com/spaceparmesan)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Violin" (https://sketchfab.com/3d-models/violin-4ea1eb161ce34b3cad5b2aa50428d9f5) by spaceparmesan (https://sketchfab.com/spaceparmesan) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

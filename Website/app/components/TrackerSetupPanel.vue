@@ -34,7 +34,7 @@
 						<p class="text-[11px] tracking-[0.2em] text-slate-400 uppercase">Video</p>
 						<div class="mt-2 flex items-center gap-3">
 							<video
-								v-if="requiresVideoLabeling && sourceVideoUrl"
+								v-if="sourceVideoUrl"
 								:key="`${sourceVideoUrl}-preview-strip`"
 								:src="sourceVideoUrl"
 								muted
@@ -42,7 +42,7 @@
 								preload="metadata"
 								class="h-10 w-16 rounded-lg border border-white/10 bg-black/40 object-cover"
 							/>
-							<p class="text-xs text-slate-200">{{ step4Preview }}</p>
+							<p class="text-xs text-slate-200">{{ sourceVideoLabel || "Upload a source video" }}</p>
 						</div>
 					</div>
 				</div>
@@ -133,30 +133,27 @@
 									<p class="text-xs text-slate-400">{{ sourceVideoLabel || "No video selected yet" }}</p>
 									<video v-if="sourceVideoUrl" :key="sourceVideoUrl" :src="sourceVideoUrl" controls class="w-full rounded-xl border border-white/10 bg-black/40" />
 								</div>
+
+								<div v-else-if="inputModeSelection === 'webcam'" class="rounded-2xl border border-white/10 bg-black/20 p-4 text-xs text-slate-300">
+									Webcam mode uses your live camera feed and does not require a source video upload.
+								</div>
 							</div>
 						</div>
 					</template>
 
 					<template #evaluation>
 						<div :ref="(el) => setStepContentRef(el, 2)" class="mt-3 rounded-2xl border border-white/10 bg-slate-950/40 p-4">
-							<URadioGroup v-model="evaluationModeSelection" :items="evaluationModeItems" color="primary" variant="card" orientation="horizontal" size="sm" class="w-full" />
-						</div>
-					</template>
-
-					<template #labeling>
-						<div :ref="(el) => setStepContentRef(el, labelingStepValue)" class="mt-3 space-y-4 rounded-2xl border border-white/10 bg-slate-950/40 p-4">
-							<div class="rounded-2xl border border-white/10 bg-slate-950/50 p-4">
-								<p class="text-xs tracking-[0.3em] text-slate-400 uppercase">Labeling preview</p>
-								<p class="mt-2 text-sm text-slate-200">{{ sourceVideoLabel || "Use the video selected in the input step." }}</p>
-								<NoteTargetEditor context="labeling" />
+							<div class="space-y-3">
+								<URadioGroup v-model="evaluationModeSelection" :items="evaluationModeItemsForInput" color="primary" variant="card" orientation="horizontal" size="sm" class="w-full" />
+								<p v-if="inputModeSelection === 'video'" class="text-xs text-slate-400">Video sessions are currently limited to no-evaluation mode.</p>
 							</div>
 						</div>
 					</template>
 
 					<template #start>
-						<div :ref="(el) => setStepContentRef(el, startStepValue)" class="mt-3 rounded-2xl border border-white/10 bg-slate-950/40 p-4">
+						<div :ref="(el) => setStepContentRef(el, 3)" class="mt-3 rounded-2xl border border-white/10 bg-slate-950/40 p-4">
 							<div class="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/30 p-3 text-sm text-slate-300">
-								<p>{{ requiresVideoLabeling && !sourceVideoUrl ? "Upload a source video to continue." : "Ready to enter tracking session." }}</p>
+								<p>{{ inputModeSelection === 'video' && !sourceVideoUrl ? "Upload a source video to continue." : "Ready to enter tracking session." }}</p>
 								<UButton size="lg" :disabled="!canStartSession" @click="startSession">Start session</UButton>
 							</div>
 						</div>
@@ -185,7 +182,6 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch, type ComponentPublicInstance } from "vue"
 import type { StepperItem } from "@nuxt/ui"
-import NoteTargetEditor from "~/components/NoteTargetEditor.vue"
 import { useTrackerSession } from "~/composables/useTrackerSession"
 
 const emit = defineEmits<{ start: [] }>()
@@ -229,23 +225,14 @@ const inputModeItems = [
 	{ label: "Video", value: "video", description: "Use uploaded video input" },
 ]
 
-const evaluationModeItems = [
-	{ label: "No evaluation", value: "none", description: "Track without labeling notes" },
-	{ label: "Evaluation mode", value: "evaluation", description: "Enable note selection and metrics" },
-]
-
 const activeCharacterId = computed(() => session.selectedCharacter.value?.id ?? null)
 const hasModelSelection = computed(() => session.hasModelSelection.value)
 const inputMode = computed(() => inputModeSelection.value)
 const evaluationMode = computed(() => evaluationModeSelection.value)
 const sourceVideoUrl = computed(() => session.activeSourceVideoUrl.value)
-const requiresVideoLabeling = computed(() => inputMode.value === "video" && evaluationMode.value === "evaluation")
 const isStep1Done = computed(() => hasModelSelection.value)
 const isStep2Done = computed(() => inputMode.value !== undefined)
 const isStep3Done = computed(() => evaluationMode.value !== undefined)
-const isReadyForStartStep = computed(() => (requiresVideoLabeling.value ? Boolean(sourceVideoUrl.value) : true))
-const labelingStepValue = 3
-const startStepValue = computed(() => (requiresVideoLabeling.value ? 4 : 3))
 
 const displayStep = ref(0)
 const selectedCharacterImage = computed(() => session.selectedCharacter.value?.image ?? null)
@@ -253,19 +240,29 @@ const sourceVideoLabel = computed(() => session.sourceVideoName.value)
 const step1Preview = computed(() => session.activeModelLabel.value ?? "Choose a built-in or custom VRM")
 const step2Preview = computed(() => {
 	if (inputMode.value === undefined) return "Not selected yet"
-	return inputMode.value === "video" ? "Video input" : "Webcam input"
+	if (inputMode.value === "video") return sourceVideoUrl.value ? "Video input (uploaded)" : "Video input (upload required)"
+	return "Webcam input"
 })
 const step3Preview = computed(() => {
 	if (evaluationMode.value === undefined) return "Not selected yet"
 	return evaluationMode.value === "evaluation" ? "Evaluation mode enabled" : "No evaluation"
 })
-const step4Preview = computed(() => sourceVideoLabel.value ?? "Upload a source video to label timeline")
 const readySummary = computed(() => {
 	const model = session.activeModelLabel.value ?? "No model"
 	const source = inputMode.value === "video" ? (sourceVideoLabel.value ?? "Video not selected") : inputMode.value === "webcam" ? "Webcam" : "Input mode pending"
 	const evaluation =
 		evaluationMode.value === "evaluation" ? (session.selectedNote.value?.label ?? "Evaluation enabled") : evaluationMode.value === "none" ? "No evaluation" : "Evaluation mode pending"
 	return `${model} - ${source} - ${evaluation}`
+})
+const evaluationModeItemsForInput = computed(() => {
+	if (inputMode.value === "video") {
+		return [{ label: "No evaluation", value: "none", description: "Video mode currently supports tracking without evaluation only" }]
+	}
+
+	return [
+		{ label: "No evaluation", value: "none", description: "Track without labeling notes" },
+		{ label: "Evaluation mode", value: "evaluation", description: "Enable note selection and metrics" },
+	]
 })
 const enabledStepValues = computed(() => stepperItems.value.filter((item) => !item.disabled).map((item) => Number(item.value)))
 const currentStepIndex = computed(() => enabledStepValues.value.findIndex((value) => value === displayStep.value))
@@ -277,14 +274,20 @@ const stepperItems = computed<StepperItem[]>(() => {
 		{ title: "Select a VRM", description: step1Preview.value, icon: "i-lucide-user-round", value: 0, slot: "model" },
 		{ title: "Select input mode", description: step2Preview.value, icon: "i-lucide-video", value: 1, slot: "input", disabled: !isStep1Done.value },
 		{ title: "Select evaluation mode", description: step3Preview.value, icon: "i-lucide-list-checks", value: 2, slot: "evaluation", disabled: !isStep2Done.value },
+		{ title: "Start session", description: readySummary.value, icon: "i-lucide-play", value: 3, slot: "start", disabled: !isStep3Done.value },
 	]
+	return items
+})
 
-	if (requiresVideoLabeling.value) {
-		items.push({ title: "Label video timeline", description: step4Preview.value, icon: "i-lucide-clapperboard", value: labelingStepValue, slot: "labeling", disabled: !isStep3Done.value })
+watch(inputModeSelection, (mode) => {
+	if (mode === "video") {
+		evaluationModeSelection.value = "none"
+		return
 	}
 
-	items.push({ title: "Start session", description: readySummary.value, icon: "i-lucide-play", value: startStepValue.value, slot: "start", disabled: !isReadyForStartStep.value })
-	return items
+	if (mode === "webcam" && evaluationModeSelection.value === undefined) {
+		evaluationModeSelection.value = "none"
+	}
 })
 
 const setStepContentRef = (el: Element | ComponentPublicInstance | null, step: number) => {
@@ -331,11 +334,11 @@ const goToNextStep = () => {
 
 const canStartSession = computed(() => {
 	if (!hasModelSelection.value) return false
-	if (!inputMode.value) return false
-	if (!evaluationMode.value) return false
+	if (!inputMode.value || !evaluationMode.value) return false
 	if (inputMode.value === "video") {
 		return Boolean(session.activeSourceVideoUrl.value)
 	}
+
 	return true
 })
 const customModelLabel = computed(() => session.customModelName.value)
@@ -346,7 +349,7 @@ const startSession = () => {
 	}
 
 	session.setSourceMode(inputModeSelection.value)
-	session.setEvaluationMode(evaluationModeSelection.value)
+	session.setEvaluationMode(inputModeSelection.value === "video" ? "none" : evaluationModeSelection.value)
 	if (!canStartSession.value) {
 		return
 	}

@@ -20,7 +20,6 @@ export const useThreeScene = (hostRef: any) => {
 	const originalMaterials = new Map<THREE.Mesh, THREE.Material | THREE.Material[]>()
 	let wireframeMode = false
 
-
 	const init = async () => {
 		scene.value = new THREE.Scene()
 		scene.value.background = new THREE.Color(0x9ed7b6)

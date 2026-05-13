@@ -19,11 +19,13 @@ export const normalizeHolisticResults = (results: HolisticResults): HolisticResu
 	const flipZ = -1
 
 	const applyFlip = (landmarks: HolisticResults[keyof HolisticResults]) => {
-		return landmarks?.map((landmark) => ({
-			...landmark,
-			y: landmark.y * flipY,
-			z: (landmark.z ?? 0) * flipZ,
-		})) ?? null
+		return (
+			landmarks?.map((landmark) => ({
+				...landmark,
+				y: landmark.y * flipY,
+				z: (landmark.z ?? 0) * flipZ,
+			})) ?? null
+		)
 	}
 
 	normalized.poseLandmarks = applyFlip(normalized.poseLandmarks)

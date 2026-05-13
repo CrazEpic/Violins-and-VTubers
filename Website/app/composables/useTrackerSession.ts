@@ -25,7 +25,7 @@ export type TrackerSessionExport = {
 const customModelObjectUrl = ref<string | null>(null)
 const sourceVideoObjectUrl = ref<string | null>(null)
 
-const inputMode = ref<InputMode>("webcam")
+const inputMode = ref<InputMode>("video")
 const evaluationMode = ref<EvaluationMode>("none")
 const selectedNoteId = ref<string | null>(null)
 const noteRanges = ref<SessionNoteRange[]>([])
@@ -125,9 +125,9 @@ export const useTrackerSession = () => {
 		selectedNoteId.value = noteId
 	}
 
-		const deleteNoteRange = (rangeId: string) => {
-			noteRanges.value = noteRanges.value.filter((range) => range.id !== rangeId)
-		}
+	const deleteNoteRange = (rangeId: string) => {
+		noteRanges.value = noteRanges.value.filter((range) => range.id !== rangeId)
+	}
 
 	const addNoteRange = (range: SessionNoteRange) => {
 		noteRanges.value = [...noteRanges.value, range]
@@ -162,7 +162,7 @@ export const useTrackerSession = () => {
 				noteRanges: noteRanges.value,
 			},
 			null,
-			2,
+			2
 		)
 	}
 

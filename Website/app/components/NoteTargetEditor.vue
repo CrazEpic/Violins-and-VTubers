@@ -2,7 +2,7 @@
 	<div class="rounded-2xl border border-white/10 bg-slate-950/40 p-4">
 		<div class="flex flex-wrap items-center justify-between gap-3">
 			<div>
-				<p class="text-xs uppercase tracking-[0.3em] text-slate-400">Note target</p>
+				<p class="text-xs tracking-[0.3em] text-slate-400 uppercase">Note target</p>
 				<h2 class="text-lg font-medium text-white">Violin positions</h2>
 			</div>
 			<span class="text-xs text-slate-400">{{ noteOptions.length }} options</span>
@@ -10,8 +10,8 @@
 
 		<div class="mt-4 rounded-xl border border-white/10 bg-black/30 p-3">
 			<div class="mb-2 flex items-center justify-between gap-2">
-				<p class="text-xs uppercase tracking-[0.3em] text-slate-400">String note grid</p>
-				<p class="text-xs text-slate-400">Selected: {{ selectedNoteLabel || 'None' }}</p>
+				<p class="text-xs tracking-[0.3em] text-slate-400 uppercase">String note grid</p>
+				<p class="text-xs text-slate-400">Selected: {{ selectedNoteLabel || "None" }}</p>
 			</div>
 			<div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
 				<div v-for="column in groupedNoteColumns" :key="column.stringName" class="rounded-lg border border-white/10 bg-slate-950/40 p-2">
@@ -37,7 +37,7 @@
 			<div class="grid gap-3 rounded-xl border border-white/10 bg-black/30 p-4">
 				<div v-if="sourceVideoUrl" class="space-y-2 rounded-xl border border-white/10 bg-slate-950/50 p-3">
 					<div class="flex items-center justify-between">
-						<p class="text-xs uppercase tracking-[0.3em] text-slate-400">Video preview</p>
+						<p class="text-xs tracking-[0.3em] text-slate-400 uppercase">Video preview</p>
 						<p class="text-xs text-slate-300">{{ formatMs(timelineCursorMs) }}</p>
 					</div>
 					<video
@@ -69,7 +69,7 @@
 
 				<div class="rounded-xl border border-white/10 bg-slate-950/50 p-3">
 					<div class="mb-2 flex flex-wrap items-center justify-between gap-2">
-						<p class="text-xs uppercase tracking-[0.3em] text-slate-400">Cursor</p>
+						<p class="text-xs tracking-[0.3em] text-slate-400 uppercase">Cursor</p>
 						<p class="text-xs text-slate-300">{{ formatMs(timelineCursorMs) }} / {{ formatMs(timelineMaxMs) }}</p>
 					</div>
 					<USlider v-model="timelineCursorModel" :min="0" :max="timelineMaxMs" :step="10" :tooltip="true" />
@@ -85,7 +85,7 @@
 						<div class="absolute inset-y-0 w-0.5 bg-white/80" :style="{ left: `${cursorPercent}%` }" />
 					</div>
 					<p class="mt-2 text-xs text-slate-400">
-						{{ noteRanges.length ? `${noteRanges.length} segment(s) on timeline` : 'No segments yet. Add one at the current cursor position.' }}
+						{{ noteRanges.length ? `${noteRanges.length} segment(s) on timeline` : "No segments yet. Add one at the current cursor position." }}
 					</p>
 				</div>
 
@@ -121,7 +121,7 @@
 
 						<div class="grid gap-3 md:grid-cols-[1fr_repeat(2,minmax(0,11rem))]">
 							<div class="rounded-xl border border-white/10 bg-black/20 p-3">
-								<p class="text-[11px] uppercase tracking-[0.18em] text-slate-400">Selected note</p>
+								<p class="text-[11px] tracking-[0.18em] text-slate-400 uppercase">Selected note</p>
 								<p class="mt-1 text-sm text-white">{{ getNoteDisplayLabel(range.noteId) }}</p>
 							</div>
 
@@ -131,7 +131,7 @@
 									variant="ghost"
 									color="neutral"
 									size="xs"
-									class="cursor-ew-resize px-0! py-0! text-[11px] uppercase tracking-[0.18em] text-slate-400"
+									class="cursor-ew-resize px-0! py-0! text-[11px] tracking-[0.18em] text-slate-400 uppercase"
 									@pointerdown.prevent="startValueScrub($event, range.id, 'start')"
 								>
 									Start (drag)
@@ -151,7 +151,7 @@
 									variant="ghost"
 									color="neutral"
 									size="xs"
-									class="cursor-ew-resize px-0! py-0! text-[11px] uppercase tracking-[0.18em] text-slate-400"
+									class="cursor-ew-resize px-0! py-0! text-[11px] tracking-[0.18em] text-slate-400 uppercase"
 									@pointerdown.prevent="startValueScrub($event, range.id, 'end')"
 								>
 									End (drag)
@@ -171,8 +171,8 @@
 			</div>
 		</div>
 		<div v-else class="mt-4 rounded-xl border border-white/10 bg-black/30 p-3 text-sm text-slate-300">
-			<p class="text-xs uppercase tracking-[0.3em] text-slate-400">Current note</p>
-			<p class="mt-1">{{ selectedNoteLabel || 'No note selected' }}</p>
+			<p class="text-xs tracking-[0.3em] text-slate-400 uppercase">Current note</p>
+			<p class="mt-1">{{ selectedNoteLabel || "No note selected" }}</p>
 		</div>
 	</div>
 </template>
@@ -230,7 +230,7 @@ const onLabelingFileChange = async (value: File | null | undefined) => {
 		const text = await file.text()
 		session.importLabeling(text)
 	} catch (e) {
-		console.error('Failed to import labeling file:', e)
+		console.error("Failed to import labeling file:", e)
 	}
 }
 
@@ -343,11 +343,11 @@ const addRangeAtCursor = () => {
 
 const exportLabeling = () => {
 	const json = session.exportLabeling()
-	const blob = new Blob([json], { type: 'application/json' })
+	const blob = new Blob([json], { type: "application/json" })
 	const url = URL.createObjectURL(blob)
-	const a = document.createElement('a')
+	const a = document.createElement("a")
 	a.href = url
-	a.download = 'labeling.json'
+	a.download = "labeling.json"
 	a.click()
 	URL.revokeObjectURL(url)
 }

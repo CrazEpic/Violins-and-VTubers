@@ -54,11 +54,7 @@ const asPoint = (value: THREE.Vector3 | null) => {
 export const useViolinFingerAccuracy = () => {
 	const latestReading = ref<FingerAccuracyReading | null>(null)
 
-	const updateForSelectedNote = (
-		selectedNote: ViolinNoteOption | null,
-		dependencies: AccuracyDependencies,
-		timestamp = performance.now(),
-	): FingerAccuracyReading | null => {
+	const updateForSelectedNote = (selectedNote: ViolinNoteOption | null, dependencies: AccuracyDependencies, timestamp = performance.now()): FingerAccuracyReading | null => {
 		if (!selectedNote) {
 			latestReading.value = null
 			return null

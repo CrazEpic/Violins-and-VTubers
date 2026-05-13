@@ -88,19 +88,21 @@ export const useViolinPose = () => {
 		right.normalize()
 
 		const up = new THREE.Vector3().crossVectors(right, forward).normalize()
-		const tiltedUp = up.clone().multiplyScalar(Math.cos(deg30)).add(right.clone().multiplyScalar(Math.sin(deg30))).normalize()
+		const tiltedUp = up
+			.clone()
+			.multiplyScalar(Math.cos(deg30))
+			.add(right.clone().multiplyScalar(Math.sin(deg30)))
+			.normalize()
 		const tiltedRight = new THREE.Vector3().crossVectors(forward, tiltedUp).normalize()
 
-		const rotation = new THREE.Euler().setFromRotationMatrix(
-			new THREE.Matrix4().makeBasis(tiltedRight, tiltedUp, forward),
-		)
+		const rotation = new THREE.Euler().setFromRotationMatrix(new THREE.Matrix4().makeBasis(tiltedRight, tiltedUp, forward))
 
 		return {
 			position: { x: anchor.x, y: anchor.y, z: anchor.z },
 			rotationDeg: {
 				x: THREE.MathUtils.radToDeg(rotation.x),
 				y: THREE.MathUtils.radToDeg(rotation.y),
-				z: THREE.MathUtils.radToDeg(rotation.z + Math.PI*5/4),
+				z: THREE.MathUtils.radToDeg(rotation.z + (Math.PI * 5) / 4),
 			},
 			scale: { x: 1, y: 1, z: 1 },
 		}

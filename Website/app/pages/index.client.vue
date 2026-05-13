@@ -9,9 +9,7 @@ definePageMeta({
 	layout: false,
 })
 
-const router = useRouter()
-
 const startSession = () => {
-	router.push("/tracker")
+	navigateTo("/tracker")
 }
 </script>

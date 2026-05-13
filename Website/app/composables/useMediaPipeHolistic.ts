@@ -1,14 +1,49 @@
-import { drawConnectors, drawLandmarks } from "@mediapipe/drawing_utils"
-import { FACEMESH_TESSELATION, HAND_CONNECTIONS, Holistic, POSE_CONNECTIONS, type Results } from "@mediapipe/holistic"
-import { Camera } from "@mediapipe/camera_utils"
+import "@mediapipe/drawing_utils"
+import "@mediapipe/holistic"
+import "@mediapipe/camera_utils"
+import type { drawConnectors as MediaPipeDrawConnectors, drawLandmarks as MediaPipeDrawLandmarks } from "@mediapipe/drawing_utils"
+import type { Camera as MediaPipeCamera } from "@mediapipe/camera_utils"
+import type {
+	Holistic as MediaPipeHolistic,
+	InputImage,
+	LandmarkConnectionArray,
+	Results,
+} from "@mediapipe/holistic"
+
+type DrawConnectorsFn = typeof MediaPipeDrawConnectors
+type DrawLandmarksFn = typeof MediaPipeDrawLandmarks
+type HolisticCtor = new (config: { locateFile: (file: string) => string }) => MediaPipeHolistic
+
+type CameraCtor = new (
+	video: HTMLVideoElement,
+	options: {
+		width: number
+		height: number
+		onFrame: () => Promise<void>
+	},
+) => MediaPipeCamera
+
+	type MediaPipeHolisticGlobals = {
+		Holistic?: HolisticCtor
+		FACEMESH_TESSELATION?: LandmarkConnectionArray
+		HAND_CONNECTIONS?: LandmarkConnectionArray
+		POSE_CONNECTIONS?: LandmarkConnectionArray
+	}
+
+	type MediaPipeDrawingGlobals = {
+		drawConnectors?: DrawConnectorsFn
+		drawLandmarks?: DrawLandmarksFn
+	}
 
 export const useMediaPipeHolistic = (videoRef: any, guideCanvasRef?: any) => {
-	const holistic = shallowRef<Holistic | null>(null)
-	let camera: Camera | null = null
+		const holistic = shallowRef<MediaPipeHolistic | null>(null)
+	let camera: MediaPipeCamera | null = null
 	let videoLoopId = 0
 	let guideCanvasWidth = 0
 	let guideCanvasHeight = 0
 	let guideCanvasCtx: CanvasRenderingContext2D | null = null
+		let holisticGlobals: Required<MediaPipeHolisticGlobals> | null = null
+		let drawingGlobals: Required<MediaPipeDrawingGlobals> | null = null
 
 	let onResultsCallback: ((results: Results) => void) | null = null
 
@@ -16,10 +51,60 @@ export const useMediaPipeHolistic = (videoRef: any, guideCanvasRef?: any) => {
 		onResultsCallback = callback
 	}
 
+	const resolveCameraCtor = (): CameraCtor => {
+		const cameraCtor = (globalThis as { Camera?: CameraCtor }).Camera
+		if (!cameraCtor) {
+			throw new Error("MediaPipe Camera is unavailable on global scope")
+		}
+
+		return cameraCtor
+	}
+
+	const resolveHolisticGlobals = (): Required<MediaPipeHolisticGlobals> => {
+		if (holisticGlobals) {
+			return holisticGlobals
+		}
+
+		const globals = globalThis as MediaPipeHolisticGlobals
+		if (!globals.Holistic || !globals.FACEMESH_TESSELATION || !globals.HAND_CONNECTIONS || !globals.POSE_CONNECTIONS) {
+			throw new Error("MediaPipe Holistic globals are unavailable")
+		}
+
+		holisticGlobals = {
+			Holistic: globals.Holistic,
+			FACEMESH_TESSELATION: globals.FACEMESH_TESSELATION,
+			HAND_CONNECTIONS: globals.HAND_CONNECTIONS,
+			POSE_CONNECTIONS: globals.POSE_CONNECTIONS,
+		}
+
+		return holisticGlobals
+	}
+
+	const resolveDrawingGlobals = (): Required<MediaPipeDrawingGlobals> => {
+		if (drawingGlobals) {
+			return drawingGlobals
+		}
+
+		const globals = globalThis as MediaPipeDrawingGlobals
+		if (!globals.drawConnectors || !globals.drawLandmarks) {
+			throw new Error("MediaPipe drawing globals are unavailable")
+		}
+
+		drawingGlobals = {
+			drawConnectors: globals.drawConnectors,
+			drawLandmarks: globals.drawLandmarks,
+		}
+
+		return drawingGlobals
+	}
+
 	const drawResults = (results: Results) => {
 		if (!videoRef.value || !guideCanvasRef?.value) {
 			return
 		}
+
+		const { drawConnectors, drawLandmarks } = resolveDrawingGlobals()
+		const { FACEMESH_TESSELATION, HAND_CONNECTIONS, POSE_CONNECTIONS } = resolveHolisticGlobals()
 
 		const nextWidth = videoRef.value.videoWidth || guideCanvasRef.value.width
 		const nextHeight = videoRef.value.videoHeight || guideCanvasRef.value.height
@@ -90,7 +175,7 @@ export const useMediaPipeHolistic = (videoRef: any, guideCanvasRef?: any) => {
 		guideCanvasCtx.restore()
 	}
 
-	const sendFrame = async (image: CanvasImageSource) => {
+	const sendFrame = async (image: InputImage) => {
 		if (!holistic.value) {
 			return
 		}
@@ -99,6 +184,8 @@ export const useMediaPipeHolistic = (videoRef: any, guideCanvasRef?: any) => {
 	}
 
 	const init = async (baseUrl: string) => {
+		const { Holistic } = resolveHolisticGlobals()
+
 		holistic.value = new Holistic({
 			locateFile: (file) => `${baseUrl}mediapipe/holistic/${file}`,
 		})
@@ -119,6 +206,8 @@ export const useMediaPipeHolistic = (videoRef: any, guideCanvasRef?: any) => {
 
 	const startWebcam = async () => {
 		if (!videoRef.value) return
+
+		const Camera = resolveCameraCtor()
 
 		camera = new Camera(videoRef.value, {
 			width: 640,

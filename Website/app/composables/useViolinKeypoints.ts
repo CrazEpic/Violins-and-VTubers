@@ -32,22 +32,10 @@ export const useViolinKeypoints = () => {
 			},
 			geometry: {
 				strings: {
-					G: [
-						[-0.01682, 0.06121, 0.1583] as Vec3Tuple,
-						[-0.00734, 0.00855, 0.48236] as Vec3Tuple,
-					],
-					D: [
-						[-0.00656, 0.06419, 0.1583] as Vec3Tuple,
-						[-0.00259, 0.00855, 0.48236] as Vec3Tuple,
-					],
-					A: [
-						[0.00656, 0.06419, 0.1583] as Vec3Tuple,
-						[0.00259, 0.00855, 0.48236] as Vec3Tuple,
-					],
-					E: [
-						[0.01682, 0.06121, 0.1583] as Vec3Tuple,
-						[0.00734, 0.00855, 0.48236] as Vec3Tuple,
-					],
+					G: [[-0.01682, 0.06121, 0.1583] as Vec3Tuple, [-0.00734, 0.00855, 0.48236] as Vec3Tuple],
+					D: [[-0.00656, 0.06419, 0.1583] as Vec3Tuple, [-0.00259, 0.00855, 0.48236] as Vec3Tuple],
+					A: [[0.00656, 0.06419, 0.1583] as Vec3Tuple, [0.00259, 0.00855, 0.48236] as Vec3Tuple],
+					E: [[0.01682, 0.06121, 0.1583] as Vec3Tuple, [0.00734, 0.00855, 0.48236] as Vec3Tuple],
 				},
 				body_outline: [
 					[0, 0, 0] as Vec3Tuple,
@@ -74,7 +62,7 @@ export const useViolinKeypoints = () => {
 				name: `string_${stringName}_${index}`,
 				position,
 				group: "string" as const,
-			})),
+			}))
 		)
 
 		const outlinePoints = violinKeypoints.unity.geometry.body_outline.map((position, index) => ({

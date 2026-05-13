@@ -9,9 +9,9 @@
 			<span class="rounded-full bg-white/10 px-2 py-1 tracking-[0.25em] uppercase">{{ props.modelPath.split("/").pop() }}</span>
 		</div>
 
-		<div class="absolute top-16 left-4 z-50 w-72 rounded-lg border border-white/10 bg-black/65 p-3 text-xs text-slate-200 backdrop-blur">
+		<div v-if="props.evaluationMode === 'evaluation'" class="absolute top-16 left-4 z-50 w-72 rounded-lg border border-white/10 bg-black/65 p-3 text-xs text-slate-200 backdrop-blur">
 			<div class="mb-2 flex items-center justify-between">
-				<p class="uppercase tracking-[0.2em] text-slate-400">Finger Accuracy</p>
+				<p class="tracking-[0.2em] text-slate-400 uppercase">Finger Accuracy</p>
 				<span class="rounded-full bg-white/10 px-2 py-0.5 text-[10px] uppercase">{{ accuracyStatusLabel }}</span>
 			</div>
 			<div class="space-y-1">
@@ -75,12 +75,12 @@
 								variant="ghost"
 								color="neutral"
 								size="xs"
-								class="cursor-ew-resize px-0! py-0! text-[11px] uppercase tracking-[0.18em] text-cyan-300"
+								class="cursor-ew-resize px-0! py-0! text-[11px] tracking-[0.18em] text-cyan-300 uppercase"
 								@pointerdown.prevent="startCalibrationScrub($event, { scope: 'calibration', section: 'position', axis, propId: selectedProp })"
 							>
 								{{ axis.toUpperCase() }} (drag)
 							</UButton>
-							<span class="text-[10px] text-gray-400">{{ getTransformValue('position', axis).toFixed(3) }}</span>
+							<span class="text-[10px] text-gray-400">{{ getTransformValue("position", axis).toFixed(3) }}</span>
 						</div>
 						<UInputNumber
 							:step="0.001"
@@ -100,12 +100,12 @@
 								variant="ghost"
 								color="neutral"
 								size="xs"
-								class="cursor-ew-resize px-0! py-0! text-[11px] uppercase tracking-[0.18em] text-orange-300"
+								class="cursor-ew-resize px-0! py-0! text-[11px] tracking-[0.18em] text-orange-300 uppercase"
 								@pointerdown.prevent="startCalibrationScrub($event, { scope: 'calibration', section: 'rotationDeg', axis, propId: selectedProp })"
 							>
 								{{ axis.toUpperCase() }} (drag)
 							</UButton>
-							<span class="text-[10px] text-gray-400">{{ getTransformValue('rotationDeg', axis).toFixed(1) }}</span>
+							<span class="text-[10px] text-gray-400">{{ getTransformValue("rotationDeg", axis).toFixed(1) }}</span>
 						</div>
 						<UInputNumber
 							:step="0.1"
@@ -125,12 +125,12 @@
 								variant="ghost"
 								color="neutral"
 								size="xs"
-								class="cursor-ew-resize px-0! py-0! text-[11px] uppercase tracking-[0.18em] text-lime-300"
+								class="cursor-ew-resize px-0! py-0! text-[11px] tracking-[0.18em] text-lime-300 uppercase"
 								@pointerdown.prevent="startCalibrationScrub($event, { scope: 'calibration', section: 'scale', axis, propId: selectedProp })"
 							>
 								{{ axis.toUpperCase() }} (drag)
 							</UButton>
-							<span class="text-[10px] text-gray-400">{{ getTransformValue('scale', axis).toFixed(3) }}</span>
+							<span class="text-[10px] text-gray-400">{{ getTransformValue("scale", axis).toFixed(3) }}</span>
 						</div>
 						<UInputNumber
 							:step="0.001"
@@ -150,12 +150,12 @@
 								variant="ghost"
 								color="neutral"
 								size="xs"
-								class="cursor-ew-resize px-0! py-0! text-[11px] uppercase tracking-[0.18em] text-fuchsia-300"
+								class="cursor-ew-resize px-0! py-0! text-[11px] tracking-[0.18em] text-fuchsia-300 uppercase"
 								@pointerdown.prevent="startCalibrationScrub($event, { scope: 'parent', section: 'position', axis, propId: selectedProp })"
 							>
 								Position {{ axis.toUpperCase() }} (drag)
 							</UButton>
-							<span class="text-[10px] text-gray-400">{{ getParentValue('position', axis).toFixed(3) }}</span>
+							<span class="text-[10px] text-gray-400">{{ getParentValue("position", axis).toFixed(3) }}</span>
 						</div>
 						<UInputNumber
 							:step="0.001"
@@ -200,18 +200,18 @@
 				<div v-if="transformOffset" class="rounded border border-white/10 p-2 text-[11px] text-gray-300">
 					<div class="font-medium text-white">Current Offset From Base ({{ selectedProp }})</div>
 					<div>
-						Parent pos: {{ formatVec3(transformOffset.parent.position, 3) }} | rot: {{ formatVec3(transformOffset.parent.rotationDeg, 1) }} | scale: {{ formatVec3(transformOffset.parent.scale, 3) }}
+						Parent pos: {{ formatVec3(transformOffset.parent.position, 3) }} | rot: {{ formatVec3(transformOffset.parent.rotationDeg, 1) }} | scale:
+						{{ formatVec3(transformOffset.parent.scale, 3) }}
 					</div>
 					<div>
-						Root pos: {{ formatVec3(transformOffset.root.position, 3) }} | rot: {{ formatVec3(transformOffset.root.rotationDeg, 1) }} | scale: {{ formatVec3(transformOffset.root.scale, 3) }}
+						Root pos: {{ formatVec3(transformOffset.root.position, 3) }} | rot: {{ formatVec3(transformOffset.root.rotationDeg, 1) }} | scale:
+						{{ formatVec3(transformOffset.root.scale, 3) }}
 					</div>
 				</div>
 
 				<div class="rounded border border-white/10 p-2">
 					<div class="mb-2 font-medium text-white">Calibration JSON</div>
-					<p class="mb-2 text-[11px] text-gray-400">
-						Default load path: <span class="text-gray-200">public/violinCalibration/prop-calibration.json</span>
-					</p>
+					<p class="mb-2 text-[11px] text-gray-400">Default load path: <span class="text-gray-200">public/violinCalibration/prop-calibration.json</span></p>
 					<div class="mb-2 flex gap-2">
 						<UButton size="xs" variant="outline" @click="exportCalibration">Export</UButton>
 						<UButton size="xs" variant="outline" @click="importCalibration">Import</UButton>
@@ -393,37 +393,37 @@ pipeline.registerStage("pose-state", (frame) => {
 
 // zero hand wrists to pose wrists
 pipeline.registerStage("zero-hand-wrists", (frame) => {
-  const { results } = frame
-  if (results.poseLandmarks && results.leftHandLandmarks) {
-    const leftPoseWrist = getPoseLandmark(results.poseLandmarks, PoseLandmark.LeftWrist)
-    const leftHandWrist = results.leftHandLandmarks[HandLandmark.Wrist]
-    if (leftPoseWrist && leftHandWrist) {
-      const offsetX = leftPoseWrist.x - leftHandWrist.x
-      const offsetY = leftPoseWrist.y - leftHandWrist.y
-      const offsetZ = (leftPoseWrist.z ?? 0) - (leftHandWrist.z ?? 0)
-      for (const lm of results.leftHandLandmarks) {
-        lm.x += offsetX
-        lm.y += offsetY
-        if (lm.z !== undefined) lm.z += offsetZ
-      }
-    }
-  }
+	const { results } = frame
+	if (results.poseLandmarks && results.leftHandLandmarks) {
+		const leftPoseWrist = getPoseLandmark(results.poseLandmarks, PoseLandmark.LeftWrist)
+		const leftHandWrist = results.leftHandLandmarks[HandLandmark.Wrist]
+		if (leftPoseWrist && leftHandWrist) {
+			const offsetX = leftPoseWrist.x - leftHandWrist.x
+			const offsetY = leftPoseWrist.y - leftHandWrist.y
+			const offsetZ = (leftPoseWrist.z ?? 0) - (leftHandWrist.z ?? 0)
+			for (const lm of results.leftHandLandmarks) {
+				lm.x += offsetX
+				lm.y += offsetY
+				if (lm.z !== undefined) lm.z += offsetZ
+			}
+		}
+	}
 
-  if (results.poseLandmarks && results.rightHandLandmarks) {
-    const rightPoseWrist = getPoseLandmark(results.poseLandmarks, PoseLandmark.RightWrist)
-    const rightHandWrist = results.rightHandLandmarks[HandLandmark.Wrist]
-    if (rightPoseWrist && rightHandWrist) {
-      const offsetX = rightPoseWrist.x - rightHandWrist.x
-      const offsetY = rightPoseWrist.y - rightHandWrist.y
-      const offsetZ = (rightPoseWrist.z ?? 0) - (rightHandWrist.z ?? 0)
-      for (const lm of results.rightHandLandmarks) {
-        lm.x += offsetX
-        lm.y += offsetY
-        if (lm.z !== undefined) lm.z += offsetZ
-      }
-    }
-  }
-  return frame
+	if (results.poseLandmarks && results.rightHandLandmarks) {
+		const rightPoseWrist = getPoseLandmark(results.poseLandmarks, PoseLandmark.RightWrist)
+		const rightHandWrist = results.rightHandLandmarks[HandLandmark.Wrist]
+		if (rightPoseWrist && rightHandWrist) {
+			const offsetX = rightPoseWrist.x - rightHandWrist.x
+			const offsetY = rightPoseWrist.y - rightHandWrist.y
+			const offsetZ = (rightPoseWrist.z ?? 0) - (rightHandWrist.z ?? 0)
+			for (const lm of results.rightHandLandmarks) {
+				lm.x += offsetX
+				lm.y += offsetY
+				if (lm.z !== undefined) lm.z += offsetZ
+			}
+		}
+	}
+	return frame
 })
 
 pipeline.registerStage("vrm-rig", (frame) => {
@@ -436,10 +436,14 @@ pipeline.registerStage("vrm-rig", (frame) => {
 })
 
 pipeline.registerStage("violin-finger-accuracy", (frame) => {
-	const reading = fingerAccuracy.updateForSelectedNote(session.selectedNote.value, {
-		getTargetWorldPoint: three.getViolinFingeringWorldPoint,
-		getLeftDistalFingerWorldPoint: (finger) => vrmRig?.getLeftDistalFingerWorldPosition(finger) ?? null,
-	}, frame.timestamp)
+	const reading = fingerAccuracy.updateForSelectedNote(
+		session.selectedNote.value,
+		{
+			getTargetWorldPoint: three.getViolinFingeringWorldPoint,
+			getLeftDistalFingerWorldPoint: (finger) => vrmRig?.getLeftDistalFingerWorldPosition(finger) ?? null,
+		},
+		frame.timestamp
+	)
 	accuracyDebugLine.update(reading)
 
 	return frame
@@ -523,10 +527,7 @@ const setTransformValue = (section: TransformSection, axis: Axis, value: number,
 }
 
 const applyScrubDelta = (binding: CalibrationScrubBinding, deltaPixels: number) => {
-	const current =
-		binding.scope === "parent"
-			? getParentValue(binding.section, binding.axis, binding.propId)
-			: getTransformValue(binding.section, binding.axis, binding.propId)
+	const current = binding.scope === "parent" ? getParentValue(binding.section, binding.axis, binding.propId) : getTransformValue(binding.section, binding.axis, binding.propId)
 	const raw = current + deltaPixels * SCRUB_SENSITIVITY[binding.section]
 	const next = roundToStep(raw, SCRUB_STEP[binding.section])
 	if (binding.scope === "parent") {

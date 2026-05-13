@@ -17,15 +17,14 @@ definePageMeta({
 })
 
 const { activeModelPath, inputMode, evaluationMode, activeSourceVideoUrl } = useTrackerSession()
-const router = useRouter()
 
 const returnToLobby = () => {
-	router.push("/")
+	navigateTo("/")
 }
 
 onMounted(() => {
 	if (!activeModelPath.value) {
-		router.push("/")
+		navigateTo("/")
 	}
 })
 </script>

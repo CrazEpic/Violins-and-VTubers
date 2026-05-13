@@ -216,13 +216,7 @@ export const useVRMRig = (vrm: VRM | null, options: RigOptions = {}) => {
 		bone.updateMatrixWorld(true)
 	}
 
-	const applyBoneBetweenPoints = (
-		boneName: BoneName,
-		childBoneName: BoneName,
-		start: THREE.Vector3 | null,
-		end: THREE.Vector3 | null,
-		alpha: number,
-	) => {
+	const applyBoneBetweenPoints = (boneName: BoneName, childBoneName: BoneName, start: THREE.Vector3 | null, end: THREE.Vector3 | null, alpha: number) => {
 		const dir = getDirection(start, end)
 		if (!dir) return
 		applyBoneFromDirection(boneName, childBoneName, dir, alpha)
@@ -248,7 +242,7 @@ export const useVRMRig = (vrm: VRM | null, options: RigOptions = {}) => {
 		indexMcp: THREE.Vector3,
 		middleMcp: THREE.Vector3,
 		pinkyMcp: THREE.Vector3,
-		alpha: number,
+		alpha: number
 	) => {
 		const handBone = getBone(handBoneName)
 		const indexBone = getBone(indexBoneName)
@@ -331,9 +325,8 @@ export const useVRMRig = (vrm: VRM | null, options: RigOptions = {}) => {
 		const leftShoulderInner = lerpPoints(leftShoulder, rightShoulder, 1 / 3)
 		const rightShoulderInner = lerpPoints(leftShoulder, rightShoulder, 2 / 3)
 
-		const neck = shouldersCenter && spineDir && leftShoulder && rightShoulder
-			? shouldersCenter.clone().add(spineDir.clone().multiplyScalar(leftShoulder.distanceTo(rightShoulder) * 0.12))
-			: shouldersCenter
+		const neck =
+			shouldersCenter && spineDir && leftShoulder && rightShoulder ? shouldersCenter.clone().add(spineDir.clone().multiplyScalar(leftShoulder.distanceTo(rightShoulder) * 0.12)) : shouldersCenter
 		const head = neck && earsCenter ? neck.clone().lerp(earsCenter, 0.65) : earsCenter
 
 		if (hipsCenter && leftHip && rightHip && shouldersCenter) {
@@ -413,7 +406,7 @@ export const useVRMRig = (vrm: VRM | null, options: RigOptions = {}) => {
 				indexMcp,
 				middleMcp,
 				pinkyMcp,
-				alpha,
+				alpha
 			)
 		}
 

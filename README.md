@@ -28,13 +28,13 @@ cd Website
 npm install
 ```
 
-1. Start the development server:
+2. Start the development server:
 
 ```bash
 npm run dev
 ```
 
-1. Open the localhost:3000 and select:
+3. Open the localhost:3000 and select:
 
 - a built-in or custom VRM avatar
 - webcam or video input

@@ -265,7 +265,7 @@ const readySummary = computed(() => {
 	const source = inputMode.value === "video" ? (sourceVideoLabel.value ?? "Video not selected") : inputMode.value === "webcam" ? "Webcam" : "Input mode pending"
 	const evaluation =
 		evaluationMode.value === "evaluation" ? (session.selectedNote.value?.label ?? "Evaluation enabled") : evaluationMode.value === "none" ? "No evaluation" : "Evaluation mode pending"
-	return `${model} · ${source} · ${evaluation}`
+	return `${model} - ${source} - ${evaluation}`
 })
 const enabledStepValues = computed(() => stepperItems.value.filter((item) => !item.disabled).map((item) => Number(item.value)))
 const currentStepIndex = computed(() => enabledStepValues.value.findIndex((value) => value === displayStep.value))

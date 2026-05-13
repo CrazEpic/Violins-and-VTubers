@@ -39,3 +39,8 @@ npm run dev
 - a built-in or custom VRM avatar
 - webcam or video input
 - evaluation mode if using webcam
+
+
+## Credits
+
+- Violin model: https://sketchfab.com/3d-models/violin-4ea1eb161ce34b3cad5b2aa50428d9f5

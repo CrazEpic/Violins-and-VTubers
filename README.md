@@ -16,15 +16,10 @@ A browser-based VRM with violin tracking demo built with Nuxt and MediaPipe.
 
 ## Setup
 
-1. Open a terminal and go to the website folder:
-
-```bash
-cd Website
-```
-
 1. Install dependencies:
 
 ```bash
+cd Website
 npm install
 ```
 

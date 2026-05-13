@@ -1,5 +1,3 @@
-import { computed, ref } from "vue"
-
 export const useTrackerState = () => {
 	const isLoading = ref(true)
 	const step = ref(0)

@@ -1,6 +1,3 @@
-import { ref } from "vue"
-import { type HolisticResults } from "@/utils/landmarks"
-
 export type TrackerFrame = {
 	results: HolisticResults
 	timestamp: number

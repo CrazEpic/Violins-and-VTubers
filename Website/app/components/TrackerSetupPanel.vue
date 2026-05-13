@@ -153,7 +153,7 @@
 					<template #start>
 						<div :ref="(el) => setStepContentRef(el, 3)" class="mt-3 rounded-2xl border border-white/10 bg-slate-950/40 p-4">
 							<div class="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/30 p-3 text-sm text-slate-300">
-								<p>{{ inputModeSelection === 'video' && !sourceVideoUrl ? "Upload a source video to continue." : "Ready to enter tracking session." }}</p>
+								<p>{{ inputModeSelection === "video" && !sourceVideoUrl ? "Upload a source video to continue." : "Ready to enter tracking session." }}</p>
 								<UButton size="lg" :disabled="!canStartSession" @click="startSession">Start session</UButton>
 							</div>
 						</div>
@@ -180,9 +180,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref, watch, type ComponentPublicInstance } from "vue"
 import type { StepperItem } from "@nuxt/ui"
-import { useTrackerSession } from "~/composables/useTrackerSession"
 
 const emit = defineEmits<{ start: [] }>()
 
@@ -341,7 +339,6 @@ const canStartSession = computed(() => {
 
 	return true
 })
-const customModelLabel = computed(() => session.customModelName.value)
 
 const startSession = () => {
 	if (!inputModeSelection.value || !evaluationModeSelection.value) {

@@ -1,6 +1,4 @@
 import * as THREE from "three"
-import type { Ref } from "vue"
-import type { FingerAccuracyReading } from "@/composables/useViolinFingerAccuracy"
 
 export const useAccuracyDebugLine = (sceneRef: Ref<THREE.Scene | null>) => {
 	const positions = new Float32Array(6)

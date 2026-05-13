@@ -1,6 +1,4 @@
-import { reactive } from "vue"
 import { type HolisticResults, type LandmarkPoint, HandLandmark, PoseLandmark, getHandLandmark, getPoseLandmark } from "@/utils/landmarks"
-import { normalizeHolisticResults } from "@/utils/landmarkTransforms"
 
 // mediapipe
 // (from camera perspective)

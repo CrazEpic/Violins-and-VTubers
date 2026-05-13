@@ -1,7 +1,5 @@
 import * as THREE from "three"
 import { VRM, VRMHumanBoneName } from "@pixiv/three-vrm"
-import { type HolisticResults, type LandmarkPoint, HandLandmark, PoseLandmark, getHandLandmark, getPoseLandmark } from "@/utils/landmarks"
-import { normalizeHolisticResults } from "@/utils/landmarkTransforms"
 
 type RigOptions = {
 	smoothFactor?: number

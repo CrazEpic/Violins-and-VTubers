@@ -1,5 +1,4 @@
 import * as THREE from "three"
-import { ref, shallowRef, type Ref } from "vue"
 
 type PropId = "violin" | "bow"
 type Axis = "x" | "y" | "z"

@@ -30,22 +30,16 @@
 			</div>
 		</div>
 
-		<NoteTargetEditor
-			v-if="props.inputMode === 'webcam' && props.evaluationMode === 'evaluation'"
-			context="live"
-			class="absolute bottom-4 left-4 z-50 max-h-[70vh] w-md overflow-auto backdrop-blur"
-		/>
+		<NoteTargetEditor v-if="props.inputMode === 'webcam' && props.evaluationMode === 'evaluation'" class="absolute bottom-4 left-4 z-50 max-h-[70vh] w-md overflow-auto backdrop-blur" />
 
 		<!-- DEBUG CONTROLS -->
 		<div class="absolute top-4 right-4 z-50 flex gap-2">
-			<!-- <UButton :icon="showBoneAxes ? 'i-lucide-check' : 'i-lucide-plus'" :color="showBoneAxes ? 'success' : 'neutral'" variant="outline" @click="toggleBoneAxes"> Axes </UButton> -->
 			<UButton :color="showWireframe ? 'success' : 'neutral'" @click="toggleWireframe">
 				<template #leading>
 					<UIcon :name="showWireframe ? 'i-lucide-check' : 'i-lucide-plus'" class="h-4 w-4" />
 				</template>
 				Wireframe
 			</UButton>
-			<!-- <UButton :icon="showCalibration ? 'i-lucide-sliders-horizontal' : 'i-lucide-sliders'" variant="outline" @click="toggleCalibration"> Calibration </UButton> -->
 			<UButton color="error" @click="$emit('quit')">
 				<template #leading>
 					<UIcon name="i-lucide-log-out" class="h-4 w-4" />
@@ -272,22 +266,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted, watch } from "vue"
-
-import { useThreeScene } from "@/composables/useThreeScene"
-import { useMediaPipeHolistic } from "@/composables/useMediaPipeHolistic"
-import { useTrackerState } from "@/composables/useTrackerState"
-import { usePoseStream } from "@/composables/usePoseStream"
-import { useVRMRig } from "@/composables/useVRMRig"
-import { useTrackerPipeline } from "@/composables/useTrackerPipeline"
-import { useViolinPose } from "@/composables/useViolinPose"
-import { useViolinFingerAccuracy } from "@/composables/useViolinFingerAccuracy"
-import { useAccuracyDebugLine } from "@/composables/useAccuracyDebugLine"
-import { useTrackerSession } from "@/composables/useTrackerSession"
-import { useRuntimeConfig } from "#app"
-import { PoseLandmark, HandLandmark, getPoseLandmark } from "@/utils/landmarks"
-import NoteTargetEditor from "@/components/NoteTargetEditor.vue"
-
 const props = withDefaults(
 	defineProps<{
 		modelPath: string
@@ -448,11 +426,6 @@ pipeline.registerStage("violin-finger-accuracy", (frame) => {
 
 	return frame
 })
-
-const toggleBoneAxes = () => {
-	showBoneAxes.value = !showBoneAxes.value
-	vrmRig?.setShowBoneAxes(showBoneAxes.value)
-}
 
 const toggleWireframe = () => {
 	showWireframe.value = !showWireframe.value

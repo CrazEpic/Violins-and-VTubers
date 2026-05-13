@@ -2,9 +2,6 @@ import * as THREE from "three"
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js"
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
 import { VRM, VRMLoaderPlugin, VRMUtils } from "@pixiv/three-vrm"
-import { shallowRef } from "vue"
-import { usePropCalibration } from "@/composables/usePropCalibration"
-import { useViolinKeypoints } from "@/composables/useViolinKeypoints"
 
 export const useThreeScene = (hostRef: any) => {
 	const scene = shallowRef<THREE.Scene | null>(null)

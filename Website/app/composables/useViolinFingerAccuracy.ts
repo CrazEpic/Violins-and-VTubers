@@ -1,7 +1,4 @@
-import { ref } from "vue"
 import type * as THREE from "three"
-import type { ViolinNoteOption, ViolinStringName } from "@/utils/violinNotes"
-import type { LeftHandFinger } from "@/composables/useVRMRig"
 
 export type FingerAccuracyStatus = "tracked" | "missing-target" | "missing-finger" | "open-string-pending"
 
@@ -37,12 +34,12 @@ const getFirstPositionSemitoneIndex = (note: ViolinNoteOption): number | null =>
 }
 
 export const isOpenStringNote = (note: ViolinNoteOption) => {
-	// Stub for future open-string metric pipeline.
+	// we don't support open string notes right now, so this is not implemented
 	return getFirstPositionSemitoneIndex(note) === null
 }
 
 export const computeOpenStringDistance = (_note: ViolinNoteOption) => {
-	// Stub for future open-string metric pipeline.
+	// we don't support open string notes right now, so this is not implemented
 	return null
 }
 

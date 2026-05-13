@@ -1,5 +1,3 @@
-import { ref } from "vue"
-
 export interface Character {
 	id: string
 	name: string

@@ -3,12 +3,7 @@ import "@mediapipe/holistic"
 import "@mediapipe/camera_utils"
 import type { drawConnectors as MediaPipeDrawConnectors, drawLandmarks as MediaPipeDrawLandmarks } from "@mediapipe/drawing_utils"
 import type { Camera as MediaPipeCamera } from "@mediapipe/camera_utils"
-import type {
-	Holistic as MediaPipeHolistic,
-	InputImage,
-	LandmarkConnectionArray,
-	Results,
-} from "@mediapipe/holistic"
+import type { Holistic as MediaPipeHolistic, InputImage, LandmarkConnectionArray, Results } from "@mediapipe/holistic"
 
 type DrawConnectorsFn = typeof MediaPipeDrawConnectors
 type DrawLandmarksFn = typeof MediaPipeDrawLandmarks
@@ -20,30 +15,34 @@ type CameraCtor = new (
 		width: number
 		height: number
 		onFrame: () => Promise<void>
-	},
+	}
 ) => MediaPipeCamera
 
-	type MediaPipeHolisticGlobals = {
-		Holistic?: HolisticCtor
-		FACEMESH_TESSELATION?: LandmarkConnectionArray
-		HAND_CONNECTIONS?: LandmarkConnectionArray
-		POSE_CONNECTIONS?: LandmarkConnectionArray
-	}
+type MediaPipeHolisticGlobals = {
+	Holistic?: HolisticCtor
+	FACEMESH_TESSELATION?: LandmarkConnectionArray
+	HAND_CONNECTIONS?: LandmarkConnectionArray
+	POSE_CONNECTIONS?: LandmarkConnectionArray
+}
 
-	type MediaPipeDrawingGlobals = {
-		drawConnectors?: DrawConnectorsFn
-		drawLandmarks?: DrawLandmarksFn
-	}
+type MediaPipeDrawingGlobals = {
+	drawConnectors?: DrawConnectorsFn
+	drawLandmarks?: DrawLandmarksFn
+}
 
-export const useMediaPipeHolistic = (videoRef: any, guideCanvasRef?: any) => {
-		const holistic = shallowRef<MediaPipeHolistic | null>(null)
+type RefLike<T> = {
+	value: T | null | undefined
+}
+
+export const useMediaPipeHolistic = (videoRef: RefLike<HTMLVideoElement>, guideCanvasRef?: RefLike<HTMLCanvasElement>) => {
+	const holistic = shallowRef<MediaPipeHolistic | null>(null)
 	let camera: MediaPipeCamera | null = null
 	let videoLoopId = 0
 	let guideCanvasWidth = 0
 	let guideCanvasHeight = 0
 	let guideCanvasCtx: CanvasRenderingContext2D | null = null
-		let holisticGlobals: Required<MediaPipeHolisticGlobals> | null = null
-		let drawingGlobals: Required<MediaPipeDrawingGlobals> | null = null
+	let holisticGlobals: Required<MediaPipeHolisticGlobals> | null = null
+	let drawingGlobals: Required<MediaPipeDrawingGlobals> | null = null
 
 	let onResultsCallback: ((results: Results) => void) | null = null
 
